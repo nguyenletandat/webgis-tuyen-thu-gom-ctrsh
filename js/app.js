@@ -144,7 +144,9 @@ function addRoutesLayer(geojson) {
   DATA.routeLayers = {};
   geojson.features.forEach((f) => {
     const p = f.properties;
-    const layer = L.geoJSON(f, { style: { color: p.mau || "#333", weight: 4, opacity: 0.85 } });
+    const layer = L.geoJSON(f, {
+      style: { color: p.mau || "#333", weight: 4, opacity: 0.85, className: "route-flow" },
+    });
     const key = `${p.xe}|${p.chuyen}`;
     const label = trLabel(p.xe) + (p.chuyen ? " – " + trLabel(p.chuyen) : "");
     const popup = `

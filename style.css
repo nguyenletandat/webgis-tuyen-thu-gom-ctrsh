@@ -211,5 +211,22 @@ th { color: var(--muted); font-weight: 600; }
 .leaflet-popup-content { font-size: 12.5px; }
 .leaflet-popup-content b { color: var(--green-900); }
 
+/* Semi-transparent popups so the map/traffic underneath stays visible */
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 3px 14px rgba(0,0,0,.25);
+}
+.leaflet-popup-tip { background: rgba(255, 255, 255, 0.82); }
+
+/* Animated "flow" on route lines to show direction of vehicle travel */
+.route-flow {
+  stroke-dasharray: 10 8;
+  animation: route-flow-move 1.1s linear infinite;
+}
+@keyframes route-flow-move {
+  to { stroke-dashoffset: -36; }
+}
+
 ::-webkit-scrollbar { width: 7px; height: 7px; }
 ::-webkit-scrollbar-thumb { background: #c7d3cd; border-radius: 4px; }
