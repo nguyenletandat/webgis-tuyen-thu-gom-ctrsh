@@ -12,6 +12,9 @@ const NHOM_COLORS = {
   "Y tế": "#e6007a",
   "Khu vực công cộng": "#3cb44b",
   "Cơ quan công sở": "#808000",
+  "Cơ sở tôn giáo": "#a0522d",
+  "Cơ sở sản xuất - dịch vụ / Kho bãi": "#607d8b",
+  "Khu dân cư": "#c2985b",
 };
 
 let map, routesLayerGroup, roadsLayerGroup, meetingLayerGroup, fixedLayerGroup, collectionLayerGroup;
@@ -31,6 +34,9 @@ const NHOM_ICONS = {
   "Y tế": "🏥",
   "Khu vực công cộng": "🌳",
   "Cơ quan công sở": "🏢",
+  "Cơ sở tôn giáo": "🛐",
+  "Cơ sở sản xuất - dịch vụ / Kho bãi": "⚙️",
+  "Khu dân cư": "🏘️",
 };
 function emojiIcon(emoji, bgColor, size = 26) {
   return L.divIcon({

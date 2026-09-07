@@ -299,6 +299,9 @@ const NHOM_EN = {
   "Y tế": "Healthcare",
   "Khu vực công cộng": "Public space",
   "Cơ quan công sở": "Government office",
+  "Cơ sở tôn giáo": "Religious site",
+  "Cơ sở sản xuất - dịch vụ / Kho bãi": "Production / service / warehouse",
+  "Khu dân cư": "Residential area",
 };
 function trNhom(nhom) {
   return currentLang === "en" ? NHOM_EN[nhom] || nhom : nhom;
