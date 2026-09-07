@@ -46,15 +46,18 @@
     "ghi_chu": "Bảng 3.5 - Trích xuất Xe 1, Chuyến 1 (3 điểm hẹn)",
     "hien_trang": {
       "thoi_gian_xe_do_1_diem": "Không xác định (chờ xe thô sơ nạp rác)",
+      "thoi_gian_xe_do_1_diem_en": "Undetermined (waiting for handcarts to load waste)",
       "thoi_gian_luu_rac": "Lâu, không kiểm soát (xe thô sơ ra trước / xe tải đến trễ hoặc ngược lại)",
       "tong_thoi_gian_hoan_thanh_3_diem": "Kéo dài không xác định",
-      "danh_gia": "Phát sinh thời gian chờ Tchờ_đợi > 0, gây ùn tắc, tốn nhiên liệu chạy không tải"
+      "danh_gia": "Phát sinh thời gian chờ Tchờ_đợi > 0, gây ùn tắc, tốn nhiên liệu chạy không tải",
+      "danh_gia_en": "Idle time (T_wait) > 0 occurs, causing congestion and wasted idling fuel"
     },
     "de_xuat": {
       "thoi_gian_xe_do_1_diem_phut": 15,
       "thoi_gian_luu_rac": "Dưới 15 phút (đồng bộ thô sơ - cơ giới)",
       "tong_thoi_gian_hoan_thanh_3_diem_phut": 75,
-      "danh_gia": "Triệt tiêu thời gian chờ (Tchờ_đợi ≈ 0), tối ưu năng suất và chi phí vận hành"
+      "danh_gia": "Triệt tiêu thời gian chờ (Tchờ_đợi ≈ 0), tối ưu năng suất và chi phí vận hành",
+      "danh_gia_en": "Idle time eliminated (T_wait ≈ 0), optimizing throughput and operating cost"
     }
   },
   "quy_chuan": {
@@ -66,29 +69,41 @@
     },
     "ban_kinh_phuc_vu_de_xuat_m": 300,
     "ghi_chu": "Đồ án áp dụng mức 15 phút/điểm hẹn — nằm trong giới hạn cho phép (≤45 phút/ca) của QCVN 01:2021/BXD; khoảng cách tối thiểu tới công trình xây dựng ≥ 20 m.",
+    "ghi_chu_en": "The proposed model applies a 15-minute dwell time per meeting point — within the allowable limit (≤45 min/shift) of QCVN 01:2021/BXD; minimum distance to any building ≥ 20 m.",
     "luat_bvmt_2020": [
-      {"dieu": "Điều 76", "noi_dung": "Điểm tập kết, trạm trung chuyển CTRSH phải bố trí khu vực lưu giữ riêng biệt cho từng loại chất thải đã phân loại, không để lẫn."},
-      {"dieu": "Điều 79", "noi_dung": "Giá dịch vụ thu gom, vận chuyển tính theo khối lượng/thể tích chất thải đã phân loại; chất thải tái chế/nguy hại đã phân loại đúng quy định không phải chi trả giá dịch vụ; hộ gia đình không phân loại phải trả theo mức chất thải sinh hoạt khác. Áp dụng chậm nhất từ 31/12/2024."},
-      {"dieu": "Điều 72", "noi_dung": "Quản lý xuyên suốt vòng đời chất thải; phương tiện thu gom, vận chuyển phải đáp ứng yêu cầu kỹ thuật riêng theo từng loại CTR đã phân loại."}
+      {"dieu": "Điều 76", "noi_dung": "Điểm tập kết, trạm trung chuyển CTRSH phải bố trí khu vực lưu giữ riêng biệt cho từng loại chất thải đã phân loại, không để lẫn.",
+       "noi_dung_en": "Collection points and transfer stations for MSW must have separate storage areas for each pre-sorted waste category, without mixing."},
+      {"dieu": "Điều 79", "noi_dung": "Giá dịch vụ thu gom, vận chuyển tính theo khối lượng/thể tích chất thải đã phân loại; chất thải tái chế/nguy hại đã phân loại đúng quy định không phải chi trả giá dịch vụ; hộ gia đình không phân loại phải trả theo mức chất thải sinh hoạt khác. Áp dụng chậm nhất từ 31/12/2024.",
+       "noi_dung_en": "Collection/transport service fees are based on the weight or volume of sorted waste; correctly sorted recyclable or hazardous waste is exempt from the service fee; households that do not sort waste pay the standard MSW rate. Deadline for implementation: 31 December 2024."},
+      {"dieu": "Điều 72", "noi_dung": "Quản lý xuyên suốt vòng đời chất thải; phương tiện thu gom, vận chuyển phải đáp ứng yêu cầu kỹ thuật riêng theo từng loại CTR đã phân loại.",
+       "noi_dung_en": "Waste must be managed across its full life cycle; collection and transport vehicles must meet specific technical requirements for each sorted waste category."}
     ]
   },
   "doi_chieu_y_van": {
     "ghi_chu": "Tổng hợp từ các nghiên cứu ứng dụng GIS/Network Analysis tối ưu tuyến thu gom CTRSH (trong nước & quốc tế) — dùng để đối chiếu mức tiết kiệm mà công cụ tối ưu hóa của WebGIS tính ra cho từng tuyến.",
+    "ghi_chu_en": "Compiled from domestic and international studies applying GIS/network analysis to optimize MSW collection routes — used to benchmark the savings this WebGIS's optimizer computes for each trip.",
     "case_studies": [
-      {"noi": "Đồng Hới, Việt Nam", "tiet_kiem": "−40,5% quãng đường · −57% thời gian · −40% nhân công · −48% năng lượng", "nguon": "Nghiên cứu GIS tiếng Việt (Lê Thu Quỳnh và cộng sự)"},
-      {"noi": "Lucknow, Ấn Độ", "tiet_kiem": "−36,2% ± 12,6% quãng đường vận chuyển (từng tuyến: −27,9% đến −64,5%)", "nguon": "AGIS-based Route Optimization / IJEP 2022"},
-      {"noi": "Ipoh, Malaysia", "tiet_kiem": "−22% chiều dài tuyến · −34% thời gian thu gom", "nguon": "Elsevier, 2014"},
-      {"noi": "Al Ain, UAE", "tiet_kiem": "−14,3% nhiên liệu (mô hình đa mục tiêu)", "nguon": "Cairo case study, arXiv 2209.02652"},
-      {"noi": "Barreiro, Bồ Đào Nha", "tiet_kiem": "−43% nhiên liệu (VRP 3D có xét độ dốc)", "nguon": "Zsigraiova et al., dẫn lại trong Sustainability 2024"},
-      {"noi": "Migori, Kenya", "tiet_kiem": "−30% nhiên liệu", "nguon": "Sustainability 2024 (review)"}
+      {"noi": "Đồng Hới, Việt Nam", "tiet_kiem": "−40,5% quãng đường · −57% thời gian · −40% nhân công · −48% năng lượng",
+       "tiet_kiem_en": "−40.5% distance · −57% time · −40% labor · −48% energy", "nguon": "Nghiên cứu GIS tiếng Việt (Lê Thu Quỳnh và cộng sự)"},
+      {"noi": "Lucknow, Ấn Độ", "tiet_kiem": "−36,2% ± 12,6% quãng đường vận chuyển (từng tuyến: −27,9% đến −64,5%)",
+       "tiet_kiem_en": "−36.2% ± 12.6% haul distance (per-route range: −27.9% to −64.5%)", "nguon": "AGIS-based Route Optimization / IJEP 2022"},
+      {"noi": "Ipoh, Malaysia", "tiet_kiem": "−22% chiều dài tuyến · −34% thời gian thu gom",
+       "tiet_kiem_en": "−22% route length · −34% collection time", "nguon": "Elsevier, 2014"},
+      {"noi": "Al Ain, UAE", "tiet_kiem": "−14,3% nhiên liệu (mô hình đa mục tiêu)",
+       "tiet_kiem_en": "−14.3% fuel (multi-objective model)", "nguon": "Cairo case study, arXiv 2209.02652"},
+      {"noi": "Barreiro, Bồ Đào Nha", "tiet_kiem": "−43% nhiên liệu (VRP 3D có xét độ dốc)",
+       "tiet_kiem_en": "−43% fuel (3D VRP accounting for slope)", "nguon": "Zsigraiova et al., dẫn lại trong Sustainability 2024"},
+      {"noi": "Migori, Kenya", "tiet_kiem": "−30% nhiên liệu", "tiet_kiem_en": "−30% fuel", "nguon": "Sustainability 2024 (review)"}
     ],
-    "nhan_dinh": "Mức tiết kiệm 10–40% quãng đường/nhiên liệu là phổ biến khi áp dụng GIS Network Analysis (chủ yếu Dijkstra/shortest-path) cho tuyến thu gom CTRSH — tương đồng phương pháp Dijkstra + 2-opt mà WebGIS này áp dụng. Trường hợp Đồng Hới (Việt Nam) là mốc đối chiếu gần bối cảnh nhất."
+    "nhan_dinh": "Mức tiết kiệm 10–40% quãng đường/nhiên liệu là phổ biến khi áp dụng GIS Network Analysis (chủ yếu Dijkstra/shortest-path) cho tuyến thu gom CTRSH — tương đồng phương pháp Dijkstra + 2-opt mà WebGIS này áp dụng. Trường hợp Đồng Hới (Việt Nam) là mốc đối chiếu gần bối cảnh nhất.",
+    "nhan_dinh_en": "A 10–40% reduction in distance/fuel is common when applying GIS network analysis (mainly Dijkstra/shortest-path) to MSW collection routing — consistent with the Dijkstra + 2-opt method used in this WebGIS. The Dong Hoi (Vietnam) case is the closest contextual benchmark."
   },
   "chi_tieu_phat_sinh_doi_chieu": {
     "so_lieu_khoa_luan_kg_nguoi_ngay": 0.971,
     "so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay": 0.567,
     "so_lieu_giao_trinh_kg_nguoi_ngay": 0.65,
-    "ghi_chu": "Số liệu khóa luận (95,7 tấn/ngày ÷ 98.494 người ≈ 0,971 kg/người/ngày) cao hơn mức đo thực tế tham khảo tại TP.HCM (0,567) và mức dùng trong giáo trình Trần Thị Mỹ Diệu (0,65) — phù hợp vì Thủ Dầu Một là khu vực lõi đô thị có mật độ thương mại/chợ cao, không chỉ thuần dân cư."
+    "ghi_chu": "Số liệu khóa luận (95,7 tấn/ngày ÷ 98.494 người ≈ 0,971 kg/người/ngày) cao hơn mức đo thực tế tham khảo tại TP.HCM (0,567) và mức dùng trong giáo trình Trần Thị Mỹ Diệu (0,65) — phù hợp vì Thủ Dầu Một là khu vực lõi đô thị có mật độ thương mại/chợ cao, không chỉ thuần dân cư.",
+    "ghi_chu_en": "The source study's rate (95.7 t/day ÷ 98,494 people ≈ 0.971 kg/person/day) is higher than the reference field-measured rate in HCMC (0.567) and the rate used in the Tran Thi My Dieu textbook (0.65) — plausible since Thu Dau Mot is a dense commercial urban core, not a purely residential area."
   },
   "don_vi_thu_gom": "Công ty TNHH Thương mại dịch vụ Phúc Thịnh Design",
   "nguon_du_lieu": {

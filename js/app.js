@@ -1,4 +1,5 @@
 // Main application: loads all data layers, builds the Leaflet map, wires the sidebar UI.
+// Bilingual (VI/EN) via i18n.js: t(), trLabel(), trNhom(), bi() — see that file for scope notes.
 
 const STUDY_CENTER = [10.975, 106.66];
 const NHOM_COLORS = {
@@ -16,6 +17,7 @@ const NHOM_COLORS = {
 let map, routesLayerGroup, roadsLayerGroup, meetingLayerGroup, fixedLayerGroup, collectionLayerGroup;
 let optimizeLayerGroup, boundaryLayerGroup;
 let DATA = {};
+let currentBasemapKey = "osm";
 
 function el(html) {
   // Returns a single Element when the template has exactly one top-level element
@@ -26,18 +28,47 @@ function el(html) {
   return t.content.children.length === 1 ? t.content.firstElementChild : t.content;
 }
 
+function clear(idOrEl) {
+  const node = typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
+  if (node) node.innerHTML = "";
+  return node;
+}
+
 async function fetchJSON(path) {
   const res = await fetch(path);
   if (!res.ok) throw new Error(`Failed to load ${path}`);
   return res.json();
 }
 
-function initMap() {
-  map = L.map("map", { zoomControl: true }).setView(STUDY_CENTER, 14);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+// ---------------- Basemaps ----------------
+const BASEMAPS = {
+  osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",
     maxZoom: 19,
-  }).addTo(map);
+  }),
+  satellite: L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    { attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics", maxZoom: 19 }
+  ),
+  light: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+    maxZoom: 20,
+  }),
+  dark: L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+    maxZoom: 20,
+  }),
+};
+
+function setBasemap(key) {
+  Object.values(BASEMAPS).forEach((layer) => map.removeLayer(layer));
+  (BASEMAPS[key] || BASEMAPS.osm).addTo(map);
+  currentBasemapKey = key;
+}
+
+function initMap() {
+  map = L.map("map", { zoomControl: true }).setView(STUDY_CENTER, 14);
+  BASEMAPS.osm.addTo(map);
 
   boundaryLayerGroup = L.layerGroup().addTo(map);
   roadsLayerGroup = L.layerGroup().addTo(map);
@@ -48,20 +79,20 @@ function initMap() {
   optimizeLayerGroup = L.layerGroup().addTo(map);
 }
 
+// ---------------- Map layers (re-invocable: each clears its group first so
+// calling again after a language switch just refreshes popup text) ----------------
 function addBoundaryLayer(geojson) {
+  boundaryLayerGroup.clearLayers();
   const layer = L.geoJSON(geojson, {
-    style: {
-      color: "#0b3d2e",
-      weight: 2.5,
-      dashArray: "8,5",
-      fill: true,
-      fillOpacity: 0.02,
-    },
+    style: { color: "#0b3d2e", weight: 2.5, dashArray: "8,5", fill: true, fillOpacity: 0.02 },
   });
   const p = geojson.features[0]?.properties;
   if (p) {
+    const locale = currentLang === "en" ? "en-US" : "vi-VN";
     layer.bindPopup(
-      `<b>Phường ${p.ten_xa}</b><br/>Diện tích: ${p.dtich_km2} km²<br/>Dân số: ${p.dan_so?.toLocaleString("vi-VN")} người<br/>Mật độ: ${p.matdo_km2?.toLocaleString("vi-VN")} người/km²`
+      `<b>${t("popup_phuong")} ${p.ten_xa}</b><br/>${t("popup_dientich")}: ${p.dtich_km2} km²<br/>` +
+      `${t("popup_danso")}: ${p.dan_so?.toLocaleString(locale)} ${t("unit_nguoi")}<br/>` +
+      `${t("popup_matdo")}: ${p.matdo_km2?.toLocaleString(locale)} ${t("unit_nguoi_km2")}`
     );
   }
   layer.addTo(boundaryLayerGroup);
@@ -69,27 +100,25 @@ function addBoundaryLayer(geojson) {
 }
 
 function addRoadsLayer(geojson) {
-  const layer = L.geoJSON(geojson, {
-    style: { color: "#9aa89f", weight: 1, opacity: 0.55 },
-  });
-  layer.addTo(roadsLayerGroup);
+  roadsLayerGroup.clearLayers();
+  L.geoJSON(geojson, { style: { color: "#9aa89f", weight: 1, opacity: 0.55 } }).addTo(roadsLayerGroup);
 }
 
 function addRoutesLayer(geojson) {
+  routesLayerGroup.clearLayers();
   DATA.routeLayers = {};
   geojson.features.forEach((f) => {
     const p = f.properties;
-    const layer = L.geoJSON(f, {
-      style: { color: p.mau || "#333", weight: 4, opacity: 0.85 },
-    });
+    const layer = L.geoJSON(f, { style: { color: p.mau || "#333", weight: 4, opacity: 0.85 } });
     const key = `${p.xe}|${p.chuyen}`;
+    const label = trLabel(p.xe) + (p.chuyen ? " – " + trLabel(p.chuyen) : "");
     const popup = `
-      <b>${p.xe}${p.chuyen ? " – " + p.chuyen : ""}</b><br/>
-      Khu vực: ${p.khu_vuc}<br/>
-      Khung giờ: ${p.gio}<br/>
-      Quãng đường (mạng lưới thực): ${p.distance_km} km<br/>
-      Tuyến đường: ${p.streets.join(" → ")}<br/>
-      Điểm thu gom trọng yếu:<br/>&bull; ${p.diem_thu_gom.join("<br/>&bull; ")}
+      <b>${label}</b><br/>
+      ${t("popup_khuvuc")}: ${p.khu_vuc}<br/>
+      ${t("popup_khunggio")}: ${p.gio}<br/>
+      ${t("popup_quangduong")}: ${p.distance_km} km<br/>
+      ${t("popup_tuyenduong")}: ${p.streets.join(" → ")}<br/>
+      ${t("popup_diemthugom")}:<br/>&bull; ${p.diem_thu_gom.join("<br/>&bull; ")}
     `;
     layer.bindPopup(popup);
     layer.addTo(routesLayerGroup);
@@ -98,18 +127,18 @@ function addRoutesLayer(geojson) {
 }
 
 function addMeetingPointsLayer(geojson) {
+  meetingLayerGroup.clearLayers();
   geojson.features.forEach((f) => {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const ok = p.dat_qcvn_01_2021;
-    const circle = L.circle([lat, lon], {
+    L.circle([lat, lon], {
       radius: p.ban_kinh_phuc_vu_m || 300,
       color: "#3cb44b",
       weight: 1,
       fillColor: "#3cb44b",
       fillOpacity: 0.08,
-    });
-    circle.addTo(meetingLayerGroup);
+    }).addTo(meetingLayerGroup);
 
     const dot = L.circleMarker([lat, lon], {
       radius: 7,
@@ -118,20 +147,22 @@ function addMeetingPointsLayer(geojson) {
       fillColor: ok ? "#c0392b" : "#e0912b",
       fillOpacity: 1,
     });
+    const confidence = p.do_tin_cay_vi_tri === "chinh_xac_poi" ? t("dotincay_chinhxac") : t("dotincay_uocluong");
     dot.bindPopup(`
       <b>${p.ten}</b><br/>
-      Tuyến: ${p.tuyen}<br/>
-      Giờ đến: ${p.gio_den} · Dừng: ${p.thoi_gian_dung_phut} phút · Giờ rời: ${p.gio_roi}<br/>
-      Bán kính phục vụ: ${p.ban_kinh_phuc_vu_m} m<br/>
-      Khoảng cách công trình gần nhất: ${p.khoang_cach_cong_trinh_gan_nhat_m ?? "n/a"} m<br/>
-      QCVN 01:2021/BXD: ${ok ? "✅ Đạt" : "⚠️ Cần kiểm tra"}<br/>
-      <i>Độ tin cậy vị trí: ${p.do_tin_cay_vi_tri === "chinh_xac_poi" ? "khớp địa danh thực tế" : "ước lượng theo tuyến đường"}</i>
+      ${t("popup_tuyen")}: ${trLabel(p.tuyen)}<br/>
+      ${t("popup_gioden")}: ${p.gio_den} · ${t("popup_dung")}: ${p.thoi_gian_dung_phut} ${t("popup_phut")} · ${t("popup_gioroi")}: ${p.gio_roi}<br/>
+      ${t("popup_bankinh")}: ${p.ban_kinh_phuc_vu_m} m<br/>
+      ${t("popup_khoangcach_ct")}: ${p.khoang_cach_cong_trinh_gan_nhat_m ?? "n/a"} m<br/>
+      QCVN 01:2021/BXD: ${ok ? t("popup_dattqcvn") : t("popup_chuadat_qcvn")}<br/>
+      <i>${t("popup_dotincay")}: ${confidence}</i>
     `);
     dot.addTo(meetingLayerGroup);
   });
 }
 
 function addFixedPointsLayer(geojson) {
+  fixedLayerGroup.clearLayers();
   geojson.features.forEach((f) => {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
@@ -143,49 +174,94 @@ function addFixedPointsLayer(geojson) {
       fillColor: isDump ? "#000075" : "#9A6324",
       fillOpacity: 1,
     });
-    marker.bindPopup(`<b>${p.name}</b><br/>${p.loai}` + (isDump ? "<br/><i>~23km về phía Bắc khu vực nghiên cứu</i>" : ""));
+    marker.bindPopup(`<b>${p.name}</b><br/>${p.loai}` + (isDump ? `<br/><i>${t("popup_ghichu_baidoRac")}</i>` : ""));
     marker.addTo(fixedLayerGroup);
   });
 }
 
 function addCollectionPointsLayer(geojson) {
+  collectionLayerGroup.clearLayers();
   geojson.features.forEach((f) => {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const color = NHOM_COLORS[p.nhom] || "#777";
-    const marker = L.circleMarker([lat, lon], {
-      radius: 4,
-      color: color,
-      weight: 1,
-      fillColor: color,
-      fillOpacity: 0.7,
-    });
-    marker.bindPopup(`<b>${p.name}</b><br/>Nhóm: ${p.nhom}`);
+    const marker = L.circleMarker([lat, lon], { radius: 4, color, weight: 1, fillColor: color, fillOpacity: 0.7 });
+    marker.bindPopup(`<b>${p.name}</b><br/>${t("popup_nhom")}: ${trNhom(p.nhom)}`);
     marker.addTo(collectionLayerGroup);
   });
 }
 
+// ---------------- Legend (basemap switcher + layer toggles) ----------------
+const LEGEND_ICONS = {
+  boundary: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#0b3d2e" stroke-width="2.4" stroke-dasharray="4,2.5"/></svg>`,
+  roads: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#9aa89f" stroke-width="1.6"/></svg>`,
+  routes: `<svg width="22" height="14" viewBox="0 0 22 14">
+      <line x1="1" y1="4" x2="8" y2="4" stroke="#e6194B" stroke-width="2.6"/>
+      <line x1="8" y1="9" x2="15" y2="9" stroke="#4363d8" stroke-width="2.6"/>
+      <line x1="15" y1="4" x2="21" y2="4" stroke="#911eb4" stroke-width="2.6"/>
+    </svg>`,
+  meeting: `<svg width="22" height="14" viewBox="0 0 22 14">
+      <circle cx="11" cy="7" r="6.5" fill="#3cb44b" fill-opacity="0.18" stroke="#3cb44b" stroke-width="1"/>
+      <circle cx="11" cy="7" r="3" fill="#c0392b" stroke="#fff" stroke-width="1"/>
+    </svg>`,
+  fixed: `<svg width="22" height="14" viewBox="0 0 22 14">
+      <rect x="2" y="3" width="8" height="8" fill="#9A6324" stroke="#fff" stroke-width="1"/>
+      <rect x="12" y="3" width="8" height="8" fill="#000075" stroke="#fff" stroke-width="1"/>
+    </svg>`,
+  collection: `<svg width="22" height="14" viewBox="0 0 22 14">
+      <circle cx="5" cy="10" r="2.6" fill="#3366cc"/>
+      <circle cx="12" cy="4" r="2.6" fill="#e6194B"/>
+      <circle cx="18" cy="10" r="2.6" fill="#3cb44b"/>
+    </svg>`,
+};
+
+// remember which overlay checkboxes are checked across a legend rebuild (language switch)
+function currentLayerCheckedState() {
+  const ids = ["lyr-boundary", "lyr-roads", "lyr-routes", "lyr-meeting", "lyr-fixed", "lyr-collection"];
+  const state = {};
+  ids.forEach((id) => {
+    const elm = document.getElementById(id);
+    if (elm) state[id] = elm.checked;
+  });
+  return state;
+}
+
 function buildLegend() {
-  const legend = document.getElementById("legend");
+  const prevState = currentLayerCheckedState();
+  const legend = clear("legend");
+  const chk = (id, def) => (id in prevState ? prevState[id] : def) ? "checked" : "";
   legend.appendChild(
     el(`
     <div>
-      <h4>Lớp bản đồ</h4>
-      <label class="legend-row"><input type="checkbox" id="lyr-boundary" checked/> Ranh giới hành chính (chính xác)</label>
-      <label class="legend-row"><input type="checkbox" id="lyr-roads" checked/> Mạng lưới đường (OSM)</label>
-      <label class="legend-row"><input type="checkbox" id="lyr-routes" checked/> 13 tuyến thu gom</label>
-      <label class="legend-row"><input type="checkbox" id="lyr-meeting" checked/> Điểm hẹn + vùng đệm 300m</label>
-      <label class="legend-row"><input type="checkbox" id="lyr-fixed" checked/> Bãi tập kết / đổ rác</label>
-      <label class="legend-row"><input type="checkbox" id="lyr-collection"/> Điểm phát sinh rác (11 nhóm)</label>
+      <h4 data-i18n="legend_basemap_title">${t("legend_basemap_title")}</h4>
+      <div class="basemap-switch">
+        <label><input type="radio" name="basemap" value="osm" ${currentBasemapKey === "osm" ? "checked" : ""}/> <span>${t("basemap_osm")}</span></label>
+        <label><input type="radio" name="basemap" value="satellite" ${currentBasemapKey === "satellite" ? "checked" : ""}/> <span>${t("basemap_satellite")}</span></label>
+        <label><input type="radio" name="basemap" value="light" ${currentBasemapKey === "light" ? "checked" : ""}/> <span>${t("basemap_light")}</span></label>
+        <label><input type="radio" name="basemap" value="dark" ${currentBasemapKey === "dark" ? "checked" : ""}/> <span>${t("basemap_dark")}</span></label>
+      </div>
+      <h4>${t("legend_title")}</h4>
+      <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-meeting" ${chk("lyr-meeting", true)}/> ${LEGEND_ICONS.meeting} <span>${t("lyr_meeting")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-fixed" ${chk("lyr-fixed", true)}/> ${LEGEND_ICONS.fixed} <span>${t("lyr_fixed")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-collection" ${chk("lyr-collection", false)}/> ${LEGEND_ICONS.collection} <span>${t("lyr_collection")}</span></label>
     </div>
   `)
   );
   const bind = (id, group) => {
-    document.getElementById(id).addEventListener("change", (e) => {
+    const box = document.getElementById(id);
+    box.addEventListener("change", (e) => {
       if (e.target.checked) map.addLayer(group);
       else map.removeLayer(group);
     });
+    if (box.checked) map.addLayer(group);
+    else map.removeLayer(group);
   };
+  document.querySelectorAll('input[name="basemap"]').forEach((radio) => {
+    radio.addEventListener("change", (e) => setBasemap(e.target.value));
+  });
   bind("lyr-boundary", boundaryLayerGroup);
   bind("lyr-roads", roadsLayerGroup);
   bind("lyr-routes", routesLayerGroup);
@@ -194,7 +270,7 @@ function buildLegend() {
   bind("lyr-collection", collectionLayerGroup);
 }
 
-// ---------------- Sidebar tabs ----------------
+// ---------------- Sidebar tabs (bound once; language-independent) ----------------
 function initTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -206,31 +282,32 @@ function initTabs() {
   });
 }
 
-// ---------------- Tổng quan ----------------
+// ---------------- Tổng quan / Overview ----------------
 function renderTongQuan(stats) {
   const totalKg = stats.khoi_luong_rac.khu_vuc.reduce((s, k) => s + k.khoi_luong_tan_ngay_tong, 0);
+  const locale = currentLang === "en" ? "en-US" : "vi-VN";
   const cards = [
-    [stats.dan_so.tong_ho_dan.toLocaleString("vi-VN"), "Tổng hộ dân"],
-    [stats.dan_so.tong_nhan_khau.toLocaleString("vi-VN"), "Tổng nhân khẩu"],
-    [stats.dan_so.dien_tich_km2 + " km²", "Diện tích tự nhiên"],
-    [totalKg.toFixed(1) + " tấn/ngày", "Khối lượng CTRSH thu gom"],
-    ["8 xe / 13 chuyến", "Mạng lưới vận chuyển"],
-    ["13 điểm", "Điểm hẹn đề xuất"],
+    [stats.dan_so.tong_ho_dan.toLocaleString(locale), t("stat_ho_dan")],
+    [stats.dan_so.tong_nhan_khau.toLocaleString(locale), t("stat_nhan_khau")],
+    [stats.dan_so.dien_tich_km2 + " km²", t("stat_dien_tich")],
+    [totalKg.toFixed(1) + " " + t("unit_ton_ngay"), t("stat_khoi_luong")],
+    [t("fleet_value"), t("stat_mang_luoi")],
+    [t("meeting_value"), t("stat_diem_hen")],
   ];
-  const grid = document.getElementById("stat-cards");
+  const grid = clear("stat-cards");
   cards.forEach(([num, label]) => {
     grid.appendChild(el(`<div class="stat-card"><div class="num">${num}</div><div class="label">${label}</div></div>`));
   });
 
   const maxHo = Math.max(...stats.dan_so.khu_vuc.map((k) => k.ho_dan));
-  const chart = document.getElementById("chart-khuvuc");
+  const chart = clear("chart-khuvuc");
   stats.khoi_luong_rac.khu_vuc.forEach((k) => {
     const hoDan = stats.dan_so.khu_vuc.find((h) => h.ten === k.ten)?.ho_dan || 0;
     const pct = (hoDan / maxHo) * 100;
     chart.appendChild(
       el(`
       <div class="bar-row">
-        <div class="bar-label"><span>${k.ten} (${k.xe})</span><span>${hoDan.toLocaleString("vi-VN")} hộ · ${k.khoi_luong_tan_ngay_tong} tấn/ngày</span></div>
+        <div class="bar-label"><span>${k.ten} (${k.xe})</span><span>${hoDan.toLocaleString(locale)} ${t("unit_ho")} · ${k.khoi_luong_tan_ngay_tong} ${t("unit_ton_ngay")}</span></div>
         <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
       </div>
     `)
@@ -241,33 +318,34 @@ function renderTongQuan(stats) {
 
   const g = stats.chi_tieu_phat_sinh_doi_chieu;
   const genRows = [
-    ["Khóa luận (Thủ Dầu Một)", g.so_lieu_khoa_luan_kg_nguoi_ngay],
-    ["Đo thực tế tại TP.HCM (tham khảo)", g.so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay],
-    ["Giáo trình Trần Thị Mỹ Diệu (2010)", g.so_lieu_giao_trinh_kg_nguoi_ngay],
+    [t("gen_khoaluan"), g.so_lieu_khoa_luan_kg_nguoi_ngay],
+    [t("gen_tphcm"), g.so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay],
+    [t("gen_giaotrinh"), g.so_lieu_giao_trinh_kg_nguoi_ngay],
   ];
   const maxGen = Math.max(...genRows.map((r) => r[1]));
-  const genChart = document.getElementById("chart-phatsinh");
+  const genChart = clear("chart-phatsinh");
   genRows.forEach(([label, val]) => {
     genChart.appendChild(
       el(`
       <div class="bar-row">
-        <div class="bar-label"><span>${label}</span><span>${val} kg/người/ngày</span></div>
+        <div class="bar-label"><span>${label}</span><span>${val} ${t("unit_kg_nguoi_ngay")}</span></div>
         <div class="bar-bg"><div class="bar-fill" style="width:${(val / maxGen) * 100}%"></div></div>
       </div>
     `)
     );
   });
-  genChart.appendChild(el(`<p class="footnote">${g.ghi_chu}</p>`));
+  genChart.appendChild(el(`<p class="footnote">${bi(g, "ghi_chu")}</p>`));
 }
 
-// ---------------- Tuyến thu gom ----------------
+// ---------------- Tuyến thu gom / Routes ----------------
 function renderRouteList(geojson) {
-  const list = document.getElementById("route-list");
+  const list = clear("route-list");
   geojson.features.forEach((f) => {
     const p = f.properties;
+    const label = trLabel(p.xe) + (p.chuyen ? " – " + trLabel(p.chuyen) : "");
     const item = el(`
       <div class="route-item">
-        <div class="row1"><span class="route-swatch" style="background:${p.mau}"></span>${p.xe}${p.chuyen ? " – " + p.chuyen : ""}</div>
+        <div class="row1"><span class="route-swatch" style="background:${p.mau}"></span>${label}</div>
         <div class="meta">${p.khu_vuc} · ${p.gio} · ${p.distance_km} km</div>
         <div class="diem">${p.diem_thu_gom[0] || ""}</div>
       </div>
@@ -284,18 +362,18 @@ function renderRouteList(geojson) {
   });
 }
 
-// ---------------- Điểm hẹn & lịch trình ----------------
+// ---------------- Điểm hẹn & lịch trình / Meeting points & schedule ----------------
 function renderMeetingTable(geojson) {
-  const tbody = document.querySelector("#tbl-diemhen tbody");
+  const tbody = clear(document.querySelector("#tbl-diemhen tbody"));
   geojson.features.forEach((f) => {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const badge = p.dat_qcvn_01_2021
-      ? `<span class="badge ok">Đạt</span>`
-      : `<span class="badge warn">Kiểm tra</span>`;
+      ? `<span class="badge ok">${t("badge_dat")}</span>`
+      : `<span class="badge warn">${t("badge_kiemtra")}</span>`;
     const row = el(`
       <tr>
-        <td>${p.tuyen}</td>
+        <td>${trLabel(p.tuyen)}</td>
         <td>${p.ten}</td>
         <td>${p.gio_den}</td>
         <td>${p.gio_roi}</td>
@@ -309,25 +387,25 @@ function renderMeetingTable(geojson) {
 
 function renderCompareTable(stats) {
   const c = stats.so_sanh_hien_trang_de_xuat;
-  const box = document.getElementById("compare-table");
+  const box = clear("compare-table");
   box.appendChild(
     el(`
     <div class="result-card">
-      <b>Hiện trạng</b>
-      <div class="result-row stack"><span>Thời gian xe đỗ / điểm</span><span>${c.hien_trang.thoi_gian_xe_do_1_diem}</span></div>
-      <div class="result-row stack"><span>Đánh giá</span><span>${c.hien_trang.danh_gia}</span></div>
+      <b>${t("compare_hientrang")}</b>
+      <div class="result-row stack"><span>${t("compare_xedo")}</span><span>${bi(c.hien_trang, "thoi_gian_xe_do_1_diem")}</span></div>
+      <div class="result-row stack"><span>${t("compare_danhgia")}</span><span>${bi(c.hien_trang, "danh_gia")}</span></div>
     </div>
     <div class="result-card better">
-      <b>Đề xuất (điểm hẹn 15 phút)</b>
-      <div class="result-row"><span>Thời gian xe đỗ / điểm</span><b>${c.de_xuat.thoi_gian_xe_do_1_diem_phut} phút</b></div>
-      <div class="result-row"><span>Tổng thời gian hoàn thành 3 điểm</span><b>${c.de_xuat.tong_thoi_gian_hoan_thanh_3_diem_phut} phút</b></div>
-      <div class="result-row stack"><span>Đánh giá</span><span>${c.de_xuat.danh_gia}</span></div>
+      <b>${t("compare_dexuat")}</b>
+      <div class="result-row"><span>${t("compare_xedo")}</span><b>${c.de_xuat.thoi_gian_xe_do_1_diem_phut} ${t("unit_phut_full")}</b></div>
+      <div class="result-row"><span>${t("compare_tongthoigian")}</span><b>${c.de_xuat.tong_thoi_gian_hoan_thanh_3_diem_phut} ${t("unit_phut_full")}</b></div>
+      <div class="result-row stack"><span>${t("compare_danhgia")}</span><span>${bi(c.de_xuat, "danh_gia")}</span></div>
     </div>
   `)
   );
 }
 
-// ---------------- Tối ưu hóa ----------------
+// ---------------- Tối ưu hóa / Optimization ----------------
 function groupMeetingPointsByTrip(geojson) {
   const groups = {};
   geojson.features.forEach((f) => {
@@ -339,23 +417,28 @@ function groupMeetingPointsByTrip(geojson) {
   return groups;
 }
 
-function renderOptimizeTab(groups) {
+function populateTripSelect(groups) {
   const select = document.getElementById("select-trip");
+  const prevValue = select.value;
+  clear(select);
   Object.entries(groups).forEach(([tuyen, stops]) => {
     if (stops.length < 2) return;
     const opt = document.createElement("option");
     opt.value = tuyen;
-    opt.textContent = `${tuyen} (${stops.length} điểm hẹn)`;
+    opt.textContent = `${trLabel(tuyen)} (${stops.length} ${t("trip_options_suffix")})`;
     select.appendChild(opt);
   });
+  if ([...select.options].some((o) => o.value === prevValue)) select.value = prevValue;
+}
 
+function initOptimizeControls(groups) {
   const speedSlider = document.getElementById("speed-slider");
   const speedVal = document.getElementById("speed-val");
   speedSlider.addEventListener("input", () => (speedVal.textContent = speedSlider.value));
 
   document.getElementById("btn-optimize").addEventListener("click", () => {
-    const tuyen = select.value;
-    const stops = groups[tuyen];
+    const tuyen = document.getElementById("select-trip").value;
+    const stops = DATA.tripGroups[tuyen];
     if (!stops || stops.length < 2) return;
     const speed = parseFloat(speedSlider.value);
     const result = RouteOptimizer.optimize(stops, 0, speed);
@@ -367,35 +450,34 @@ function renderOptimizeResult(result, tuyen) {
   optimizeLayerGroup.clearLayers();
 
   L.polyline(result.baseline.coords, { color: "#999", weight: 4, dashArray: "6,6" })
-    .bindTooltip("Thứ tự đề xuất trong khóa luận")
+    .bindTooltip(t("optimize_tooltip_baseline"))
     .addTo(optimizeLayerGroup);
   L.polyline(result.optimized.coords, { color: "#1c9457", weight: 5 })
-    .bindTooltip("Thứ tự sau tối ưu hóa (Nearest-Neighbor + 2-opt)")
+    .bindTooltip(t("optimize_tooltip_optimized"))
     .addTo(optimizeLayerGroup);
 
   if (result.baseline.coords.length) {
     map.fitBounds(L.polyline(result.baseline.coords.concat(result.optimized.coords)).getBounds(), { maxZoom: 16 });
   }
 
-  const box = document.getElementById("optimize-result");
-  box.innerHTML = "";
+  const box = clear("optimize-result");
   const better = result.savingsPct > 0.5;
   box.appendChild(
     el(`
     <div class="result-card">
-      <b>${tuyen} — Thứ tự đề xuất (khóa luận)</b>
-      <div class="result-row stack"><span>Thứ tự</span><span>${result.baseline.names.join(" → ")}</span></div>
-      <div class="result-row"><span>Quãng đường</span><b>${result.baseline.distanceKm.toFixed(2)} km</b></div>
-      <div class="result-row"><span>Thời gian ước tính</span><b>${result.baseline.timeMin.toFixed(0)} phút</b></div>
+      <b>${trLabel(tuyen)} — ${t("optimize_baseline_title")}</b>
+      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${result.baseline.names.join(" → ")}</span></div>
+      <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${result.baseline.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
+      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${result.baseline.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
     </div>
     <div class="result-card ${better ? "better" : ""}">
-      <b>Thứ tự sau tối ưu hóa</b>
-      <div class="result-row stack"><span>Thứ tự</span><span>${result.optimized.names.join(" → ")}</span></div>
-      <div class="result-row"><span>Quãng đường</span><b>${result.optimized.distanceKm.toFixed(2)} km</b></div>
-      <div class="result-row"><span>Thời gian ước tính</span><b>${result.optimized.timeMin.toFixed(0)} phút</b></div>
-      <div class="result-row"><span>Tiết kiệm quãng đường</span><b>${result.savingsPct.toFixed(1)}%</b></div>
-      <div class="result-row"><span>Nhiên liệu tiết kiệm (ước tính)</span><b>${result.fuelSavedL.toFixed(2)} lít</b></div>
-      <div class="result-row"><span>CO₂ giảm phát thải (ước tính)</span><b>${result.co2SavedKg.toFixed(2)} kg</b></div>
+      <b>${t("optimize_optimized_title")}</b>
+      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${result.optimized.names.join(" → ")}</span></div>
+      <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${result.optimized.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
+      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${result.optimized.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
+      <div class="result-row"><span>${t("optimize_tietkiem")}</span><b>${result.savingsPct.toFixed(1)}%</b></div>
+      <div class="result-row"><span>${t("optimize_nhienlieu")}</span><b>${result.fuelSavedL.toFixed(2)} ${t("unit_lit")}</b></div>
+      <div class="result-row"><span>${t("optimize_co2")}</span><b>${result.co2SavedKg.toFixed(2)} ${t("unit_kg")}</b></div>
     </div>
   `)
   );
@@ -404,43 +486,43 @@ function renderOptimizeResult(result, tuyen) {
 function renderBenchmark(stats) {
   const b = stats.doi_chieu_y_van;
   if (!b) return;
-  const list = document.getElementById("benchmark-list");
+  const list = clear("benchmark-list");
   b.case_studies.forEach((c) => {
     list.appendChild(
       el(`
       <div class="result-row stack">
         <span>${c.noi}</span>
-        <span>${c.tiet_kiem} <span class="muted">(${c.nguon})</span></span>
+        <span>${bi(c, "tiet_kiem")} <span class="muted">(${c.nguon})</span></span>
       </div>
     `)
     );
   });
-  document.getElementById("benchmark-note").textContent = b.nhan_dinh;
+  document.getElementById("benchmark-note").textContent = bi(b, "nhan_dinh");
 }
 
-// ---------------- Quy chuẩn ----------------
+// ---------------- Quy chuẩn / Compliance ----------------
 function renderQuyChuan(stats, meetingGeojson) {
   const q = stats.quy_chuan;
-  const box = document.getElementById("qcvn-box");
+  const box = clear("qcvn-box");
   box.appendChild(
     el(`
     <div class="result-card">
-      <div class="result-row"><span>Nguồn</span><b>${q.nguon}</b></div>
-      <div class="result-row"><span>Thời gian vận hành tối đa / ca</span><b>${q.tram_trung_chuyen_khong_co_dinh.thoi_gian_van_hanh_toi_da_phut_ca} phút</b></div>
-      <div class="result-row"><span>Thời gian vận hành tối đa / ngày</span><b>${q.tram_trung_chuyen_khong_co_dinh.thoi_gian_van_hanh_toi_da_h_ngay} giờ</b></div>
-      <div class="result-row"><span>Khoảng cách ATMT tối thiểu</span><b>${q.tram_trung_chuyen_khong_co_dinh.khoang_cach_atmt_toi_thieu_m} m</b></div>
-      <div class="result-row"><span>Bán kính phục vụ áp dụng</span><b>${q.ban_kinh_phuc_vu_de_xuat_m} m</b></div>
+      <div class="result-row"><span>${t("qcvn_nguon")}</span><b>${q.nguon}</b></div>
+      <div class="result-row"><span>${t("qcvn_thoigianca")}</span><b>${q.tram_trung_chuyen_khong_co_dinh.thoi_gian_van_hanh_toi_da_phut_ca} ${t("unit_phut_full")}</b></div>
+      <div class="result-row"><span>${t("qcvn_thoigianngay")}</span><b>${q.tram_trung_chuyen_khong_co_dinh.thoi_gian_van_hanh_toi_da_h_ngay} ${t("unit_gio")}</b></div>
+      <div class="result-row"><span>${t("qcvn_khoangcach")}</span><b>${q.tram_trung_chuyen_khong_co_dinh.khoang_cach_atmt_toi_thieu_m} ${t("unit_m")}</b></div>
+      <div class="result-row"><span>${t("qcvn_bankinh")}</span><b>${q.ban_kinh_phuc_vu_de_xuat_m} ${t("unit_m")}</b></div>
     </div>
-    <p class="muted">${q.ghi_chu}</p>
+    <p class="muted">${bi(q, "ghi_chu")}</p>
   `)
   );
 
-  const luatList = document.getElementById("luat-bvmt-list");
+  const luatList = clear("luat-bvmt-list");
   (q.luat_bvmt_2020 || []).forEach((d) => {
-    luatList.appendChild(el(`<div class="result-card"><b>${d.dieu}</b><p class="muted" style="margin:4px 0 0">${d.noi_dung}</p></div>`));
+    luatList.appendChild(el(`<div class="result-card"><b>${d.dieu}</b><p class="muted" style="margin:4px 0 0">${bi(d, "noi_dung")}</p></div>`));
   });
 
-  const list = document.getElementById("qcvn-list");
+  const list = clear("qcvn-list");
   let passCount = 0;
   meetingGeojson.features.forEach((f) => {
     const p = f.properties;
@@ -449,7 +531,7 @@ function renderQuyChuan(stats, meetingGeojson) {
     list.appendChild(
       el(`
       <div class="result-row">
-        <span>${p.ten} <span class="muted">(${p.tuyen})</span></span>
+        <span>${p.ten} <span class="muted">(${trLabel(p.tuyen)})</span></span>
         <span class="badge ${badgeClass}">${p.khoang_cach_cong_trinh_gan_nhat_m ?? "n/a"} m</span>
       </div>
     `)
@@ -457,14 +539,60 @@ function renderQuyChuan(stats, meetingGeojson) {
   });
   list.insertAdjacentElement(
     "afterbegin",
-    el(`<p class="muted"><b>${passCount}/${meetingGeojson.features.length}</b> điểm hẹn đạt khoảng cách ATMT ≥ 20m.</p>`)
+    el(`<p class="muted"><b>${passCount}/${meetingGeojson.features.length}</b> ${t("qcvn_summary_suffix")}</p>`)
   );
+}
+
+// ---------------- Language switching ----------------
+function applyStaticI18n() {
+  document.documentElement.lang = currentLang === "en" ? "en" : "vi";
+  document.title = t("app_title");
+  document.querySelectorAll("[data-i18n]").forEach((elm) => {
+    elm.textContent = t(elm.dataset.i18n);
+  });
+  const langBtn = document.getElementById("lang-toggle");
+  if (langBtn) langBtn.textContent = t("lang_switch_label");
+}
+
+function renderAll() {
+  applyStaticI18n();
+
+  addBoundaryLayer(DATA.boundary);
+  addRoadsLayer(DATA.roads);
+  addRoutesLayer(DATA.routes);
+  addMeetingPointsLayer(DATA.meeting);
+  addFixedPointsLayer(DATA.fixed);
+  addCollectionPointsLayer(DATA.collection);
+  buildLegend();
+
+  renderTongQuan(DATA.stats);
+  renderRouteList(DATA.routes);
+  renderMeetingTable(DATA.meeting);
+  renderCompareTable(DATA.stats);
+  renderQuyChuan(DATA.stats, DATA.meeting);
+  renderBenchmark(DATA.stats);
+  populateTripSelect(DATA.tripGroups);
+}
+
+function setLanguage(lang) {
+  if (lang === currentLang) return;
+  currentLang = lang;
+  localStorage.setItem("webgis_lang", lang);
+  renderAll();
+}
+
+function initLanguageToggle() {
+  const btn = document.getElementById("lang-toggle");
+  if (!btn) return;
+  btn.textContent = t("lang_switch_label");
+  btn.addEventListener("click", () => setLanguage(currentLang === "en" ? "vi" : "en"));
 }
 
 // ---------------- Boot ----------------
 async function main() {
   initMap();
   initTabs();
+  initLanguageToggle();
 
   const [boundary, roads, routes, meeting, fixed, collection, stats] = await Promise.all([
     fetchJSON("data/boundary.geojson"),
@@ -475,7 +603,8 @@ async function main() {
     fetchJSON("data/collection_points.geojson"),
     fetchJSON("data/stats.json"),
   ]);
-  DATA.stats = stats;
+  Object.assign(DATA, { boundary, roads, routes, meeting, fixed, collection, stats });
+  DATA.tripGroups = groupMeetingPointsByTrip(meeting);
 
   const boundaryLayer = addBoundaryLayer(boundary);
   map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20] });
@@ -486,6 +615,7 @@ async function main() {
   addCollectionPointsLayer(collection);
   buildLegend();
 
+  applyStaticI18n();
   renderTongQuan(stats);
   renderRouteList(routes);
   renderMeetingTable(meeting);
@@ -494,11 +624,11 @@ async function main() {
   renderBenchmark(stats);
 
   await RoadGraph.load("data/graph.json");
-  const groups = groupMeetingPointsByTrip(meeting);
-  renderOptimizeTab(groups);
+  populateTripSelect(DATA.tripGroups);
+  initOptimizeControls(DATA.tripGroups);
 }
 
 main().catch((err) => {
   console.error(err);
-  alert("Lỗi tải dữ liệu: " + err.message + "\nHãy chạy web app qua một local server (xem README).");
+  alert(t("err_load") + ": " + err.message + "\n" + t("err_load_hint"));
 });

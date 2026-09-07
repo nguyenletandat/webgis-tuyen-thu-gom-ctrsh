@@ -15,80 +15,86 @@
     <div class="brand">
       <span class="brand-icon">♻</span>
       <div>
-        <h1>WebGIS Thu gom &amp; Tối ưu hóa Tuyến CTRSH</h1>
-        <p>Phường Thủ Dầu Một, Thành phố Hồ Chí Minh</p>
+        <h1 data-i18n="header_title">WebGIS Thu gom &amp; Tối ưu hóa Tuyến CTRSH</h1>
+        <p data-i18n="header_subtitle">Phường Thủ Dầu Một, Thành phố Hồ Chí Minh</p>
       </div>
     </div>
-    <div class="topbar-meta">
-      <span>Nguồn: Khóa luận tốt nghiệp (Võ Huỳnh Bảo Hiền, 2026) · OpenStreetMap</span>
+    <div class="topbar-right">
+      <button id="lang-toggle" title="Switch language / Đổi ngôn ngữ">EN</button>
+      <div class="topbar-meta">
+        <span data-i18n="header_credit">Nguyễn Lê Tấn Đạt · Viện Công nghệ Xanh và Bền vững</span>
+      </div>
     </div>
   </header>
 
   <div id="body">
     <nav id="sidebar">
       <div class="tabbar">
-        <button class="tab-btn active" data-tab="tongquan">📊 Tổng quan</button>
-        <button class="tab-btn" data-tab="tuyen">🚛 Tuyến thu gom</button>
-        <button class="tab-btn" data-tab="diemhen">⏱ Điểm hẹn</button>
-        <button class="tab-btn" data-tab="toiuu">⚡ Tối ưu hóa</button>
-        <button class="tab-btn" data-tab="quychuan">📐 Quy chuẩn</button>
+        <button class="tab-btn active" data-tab="tongquan">📊 <span data-i18n="tab_tongquan">Tổng quan</span></button>
+        <button class="tab-btn" data-tab="tuyen">🚛 <span data-i18n="tab_tuyen">Tuyến thu gom</span></button>
+        <button class="tab-btn" data-tab="diemhen">⏱ <span data-i18n="tab_diemhen">Điểm hẹn</span></button>
+        <button class="tab-btn" data-tab="toiuu">⚡ <span data-i18n="tab_toiuu">Tối ưu hóa</span></button>
+        <button class="tab-btn" data-tab="quychuan">📐 <span data-i18n="tab_quychuan">Quy chuẩn</span></button>
       </div>
 
       <div class="panel" id="panel-tongquan">
-        <h2>Tổng quan khu vực</h2>
+        <h2 data-i18n="tongquan_h2">Tổng quan khu vực</h2>
         <div class="stat-grid" id="stat-cards"></div>
-        <h3>Hộ dân &amp; khối lượng rác theo khu vực</h3>
+        <h3 data-i18n="tongquan_h3_khuvuc">Hộ dân &amp; khối lượng rác theo khu vực</h3>
         <div id="chart-khuvuc"></div>
-        <h3>Chỉ tiêu phát sinh rác (kg/người/ngày)</h3>
+        <h3 data-i18n="tongquan_h3_phatsinh">Chỉ tiêu phát sinh rác (kg/người/ngày)</h3>
         <div id="chart-phatsinh"></div>
-        <h3>Đơn vị thu gom</h3>
+        <h3 data-i18n="tongquan_h3_donvi">Đơn vị thu gom</h3>
         <p id="donvi-thugom" class="muted"></p>
-        <p class="footnote">Ranh giới hành chính phường Thủ Dầu Một (chính xác, sau sáp nhập
+        <p class="footnote" data-i18n="tongquan_footnote">Ranh giới hành chính phường Thủ Dầu Một (chính xác, sau sáp nhập
         2025) trích từ bộ dữ liệu 34 tỉnh/thành. Lớp đường/POI lấy từ OpenStreetMap, cắt theo
         vùng đệm quanh ranh giới nên có thể vượt nhẹ ra ngoài mép phường.</p>
       </div>
 
       <div class="panel hidden" id="panel-tuyen">
-        <h2>13 chuyến / 8 xe ép rác</h2>
+        <h2 data-i18n="tuyen_h2">13 chuyến / 8 xe ép rác</h2>
         <div id="route-list"></div>
       </div>
 
       <div class="panel hidden" id="panel-diemhen">
-        <h2>Lịch trình điểm hẹn (đề xuất)</h2>
-        <p class="muted">Định mức dừng cố định: <b>15 phút/điểm</b> (trong giới hạn ≤ 45
+        <h2 data-i18n="diemhen_h2">Lịch trình điểm hẹn (đề xuất)</h2>
+        <p class="muted" data-i18n="diemhen_note">Định mức dừng cố định: 15 phút/điểm (trong giới hạn ≤ 45
         phút/ca theo QCVN 01:2021/BXD).</p>
         <table id="tbl-diemhen">
-          <thead><tr><th>Tuyến</th><th>Điểm hẹn</th><th>Đến</th><th>Rời</th><th>QCVN</th></tr></thead>
+          <thead><tr>
+            <th data-i18n="th_tuyen">Tuyến</th><th data-i18n="th_diemhen">Điểm hẹn</th>
+            <th data-i18n="th_den">Đến</th><th data-i18n="th_roi">Rời</th><th data-i18n="th_qcvn">QCVN</th>
+          </tr></thead>
           <tbody></tbody>
         </table>
-        <h3>So sánh hiệu quả vận hành (Bảng 3.5, trích Xe 1 - Chuyến 1)</h3>
+        <h3 data-i18n="diemhen_h3_sosanh">So sánh hiệu quả vận hành (Bảng 3.5, trích Xe 1 - Chuyến 1)</h3>
         <div id="compare-table"></div>
       </div>
 
       <div class="panel hidden" id="panel-toiuu">
-        <h2>Công cụ tối ưu hóa tuyến (VRPTW)</h2>
-        <p class="muted">Chạy Dijkstra trên mạng lưới đường thật (client-side) + thuật toán
+        <h2 data-i18n="toiuu_h2">Công cụ tối ưu hóa tuyến (VRPTW)</h2>
+        <p class="muted" data-i18n="toiuu_note">Chạy Dijkstra trên mạng lưới đường thật (client-side) + thuật toán
         Nearest-Neighbor &amp; 2-opt để tìm thứ tự ghé các điểm hẹn ngắn hơn, so sánh với thứ
         tự đề xuất trong khóa luận.</p>
-        <label>Chọn chuyến có dữ liệu điểm hẹn:</label>
+        <label data-i18n="label_chontuyen">Chọn chuyến có dữ liệu điểm hẹn:</label>
         <select id="select-trip"></select>
-        <label>Tốc độ trung bình giả định (km/h):
+        <label><span data-i18n="label_tocdo">Tốc độ trung bình giả định (km/h):</span>
           <input type="range" id="speed-slider" min="8" max="30" value="15" />
           <span id="speed-val">15</span> km/h
         </label>
-        <button id="btn-optimize">⚡ Chạy tối ưu hóa</button>
+        <button id="btn-optimize" data-i18n="btn_toiuu">⚡ Chạy tối ưu hóa</button>
         <div id="optimize-result"></div>
-        <h3>Đối chiếu mức tiết kiệm trong y văn</h3>
+        <h3 data-i18n="toiuu_h3_benchmark">Đối chiếu mức tiết kiệm trong y văn</h3>
         <div id="benchmark-list"></div>
         <p class="footnote" id="benchmark-note"></p>
       </div>
 
       <div class="panel hidden" id="panel-quychuan">
-        <h2>Căn cứ quy chuẩn</h2>
+        <h2 data-i18n="quychuan_h2">Căn cứ quy chuẩn</h2>
         <div id="qcvn-box"></div>
-        <h3>Luật Bảo vệ môi trường 2020 (72/2020/QH14)</h3>
+        <h3 data-i18n="quychuan_h3_luat">Luật Bảo vệ môi trường 2020 (72/2020/QH14)</h3>
         <div id="luat-bvmt-list"></div>
-        <h3>Kiểm tra 13 điểm hẹn</h3>
+        <h3 data-i18n="quychuan_h3_kiemtra">Kiểm tra 13 điểm hẹn</h3>
         <div id="qcvn-list"></div>
       </div>
     </nav>
@@ -101,6 +107,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/graph.js"></script>
 <script src="js/optimize.js"></script>
 <script src="js/app.js"></script>

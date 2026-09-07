@@ -1,0 +1,313 @@
+// Lightweight i18n: dictionary + helpers. Proper nouns (street/place/route names) are
+// intentionally NOT translated — only UI chrome and narrative/analysis text switch language.
+
+const I18N = {
+  vi: {
+    app_title: "WebGIS Tối ưu hóa Tuyến Thu gom CTRSH — Phường Thủ Dầu Một",
+    header_title: "WebGIS Thu gom & Tối ưu hóa Tuyến CTRSH",
+    header_subtitle: "Phường Thủ Dầu Một, Thành phố Hồ Chí Minh",
+    header_credit: "Nguyễn Lê Tấn Đạt · Viện Công nghệ Xanh và Bền vững",
+
+    tab_tongquan: "Tổng quan",
+    tab_tuyen: "Tuyến thu gom",
+    tab_diemhen: "Điểm hẹn",
+    tab_toiuu: "Tối ưu hóa",
+    tab_quychuan: "Quy chuẩn",
+
+    tongquan_h2: "Tổng quan khu vực",
+    tongquan_h3_khuvuc: "Hộ dân & khối lượng rác theo khu vực",
+    tongquan_h3_phatsinh: "Chỉ tiêu phát sinh rác (kg/người/ngày)",
+    tongquan_h3_donvi: "Đơn vị thu gom",
+    tongquan_footnote: "Ranh giới hành chính phường Thủ Dầu Một (chính xác, sau sáp nhập 2025) trích từ bộ dữ liệu 34 tỉnh/thành. Lớp đường/POI lấy từ OpenStreetMap, cắt theo vùng đệm quanh ranh giới nên có thể vượt nhẹ ra ngoài mép phường.",
+
+    stat_ho_dan: "Tổng hộ dân",
+    stat_nhan_khau: "Tổng nhân khẩu",
+    stat_dien_tich: "Diện tích tự nhiên",
+    stat_khoi_luong: "Khối lượng CTRSH thu gom",
+    stat_mang_luoi: "Mạng lưới vận chuyển",
+    stat_diem_hen: "Điểm hẹn đề xuất",
+    unit_ton_ngay: "tấn/ngày",
+    unit_ho: "hộ",
+    unit_kg_nguoi_ngay: "kg/người/ngày",
+    fleet_value: "8 xe / 13 chuyến",
+    meeting_value: "13 điểm",
+    gen_khoaluan: "Khóa luận (Thủ Dầu Một)",
+    gen_tphcm: "Đo thực tế tại TP.HCM (tham khảo)",
+    gen_giaotrinh: "Giáo trình Trần Thị Mỹ Diệu (2010)",
+
+    tuyen_h2: "13 chuyến / 8 xe ép rác",
+
+    diemhen_h2: "Lịch trình điểm hẹn (đề xuất)",
+    diemhen_note: "Định mức dừng cố định: 15 phút/điểm (trong giới hạn ≤ 45 phút/ca theo QCVN 01:2021/BXD).",
+    th_tuyen: "Tuyến",
+    th_diemhen: "Điểm hẹn",
+    th_den: "Đến",
+    th_roi: "Rời",
+    th_qcvn: "QCVN",
+    diemhen_h3_sosanh: "So sánh hiệu quả vận hành (Bảng 3.5, trích Xe 1 - Chuyến 1)",
+    badge_dat: "Đạt",
+    badge_kiemtra: "Kiểm tra",
+
+    toiuu_h2: "Công cụ tối ưu hóa tuyến (VRPTW)",
+    toiuu_note: "Chạy Dijkstra trên mạng lưới đường thật (client-side) + thuật toán Nearest-Neighbor & 2-opt để tìm thứ tự ghé các điểm hẹn ngắn hơn, so sánh với thứ tự đề xuất trong khóa luận.",
+    label_chontuyen: "Chọn chuyến có dữ liệu điểm hẹn:",
+    label_tocdo: "Tốc độ trung bình giả định (km/h):",
+    btn_toiuu: "⚡ Chạy tối ưu hóa",
+    toiuu_h3_benchmark: "Đối chiếu mức tiết kiệm trong y văn",
+    trip_options_suffix: "điểm hẹn",
+
+    quychuan_h2: "Căn cứ quy chuẩn",
+    quychuan_h3_luat: "Luật Bảo vệ môi trường 2020 (72/2020/QH14)",
+    quychuan_h3_kiemtra: "Kiểm tra 13 điểm hẹn",
+
+    legend_basemap_title: "Nền bản đồ",
+    basemap_osm: "Bản đồ đường",
+    basemap_satellite: "Vệ tinh",
+    basemap_light: "Sáng (Light)",
+    basemap_dark: "Tối (Dark)",
+    legend_title: "Lớp bản đồ",
+    lyr_boundary: "Ranh giới hành chính (chính xác)",
+    lyr_roads: "Mạng lưới đường (OSM)",
+    lyr_routes: "13 tuyến thu gom",
+    lyr_meeting: "Điểm hẹn + vùng đệm 300m",
+    lyr_fixed: "Bãi tập kết / đổ rác",
+    lyr_collection: "Điểm phát sinh rác (11 nhóm)",
+
+    // Route popup
+    popup_khuvuc: "Khu vực",
+    popup_khunggio: "Khung giờ",
+    popup_quangduong: "Quãng đường (mạng lưới thực)",
+    popup_tuyenduong: "Tuyến đường",
+    popup_diemthugom: "Điểm thu gom trọng yếu",
+    // Boundary popup
+    popup_phuong: "Phường",
+    popup_dientich: "Diện tích",
+    popup_danso: "Dân số",
+    popup_matdo: "Mật độ",
+    unit_nguoi: "người",
+    unit_nguoi_km2: "người/km²",
+    // Meeting point popup
+    popup_tuyen: "Tuyến",
+    popup_gioden: "Giờ đến",
+    popup_dung: "Dừng",
+    popup_gioroi: "Giờ rời",
+    popup_phut: "phút",
+    popup_bankinh: "Bán kính phục vụ",
+    popup_khoangcach_ct: "Khoảng cách công trình gần nhất",
+    popup_dattqcvn: "✅ Đạt",
+    popup_chuadat_qcvn: "⚠️ Cần kiểm tra",
+    popup_dotincay: "Độ tin cậy vị trí",
+    dotincay_chinhxac: "khớp địa danh thực tế",
+    dotincay_uocluong: "ước lượng theo tuyến đường",
+    // Fixed points popup
+    popup_ghichu_baidoRac: "~23km về phía Bắc khu vực nghiên cứu",
+    // Collection points popup
+    popup_nhom: "Nhóm",
+
+    optimize_baseline_title: "Thứ tự đề xuất (khóa luận)",
+    optimize_optimized_title: "Thứ tự sau tối ưu hóa",
+    optimize_thutu: "Thứ tự",
+    optimize_quangduong: "Quãng đường",
+    optimize_thoigian: "Thời gian ước tính",
+    optimize_tietkiem: "Tiết kiệm quãng đường",
+    optimize_nhienlieu: "Nhiên liệu tiết kiệm (ước tính)",
+    optimize_co2: "CO₂ giảm phát thải (ước tính)",
+    optimize_tooltip_baseline: "Thứ tự đề xuất trong khóa luận",
+    optimize_tooltip_optimized: "Thứ tự sau tối ưu hóa (Nearest-Neighbor + 2-opt)",
+    unit_phut_full: "phút",
+    unit_km: "km",
+    unit_lit: "lít",
+    unit_kg: "kg",
+
+    compare_hientrang: "Hiện trạng",
+    compare_dexuat: "Đề xuất (điểm hẹn 15 phút)",
+    compare_xedo: "Thời gian xe đỗ / điểm",
+    compare_danhgia: "Đánh giá",
+    compare_tongthoigian: "Tổng thời gian hoàn thành 3 điểm",
+
+    qcvn_nguon: "Nguồn",
+    qcvn_thoigianca: "Thời gian vận hành tối đa / ca",
+    qcvn_thoigianngay: "Thời gian vận hành tối đa / ngày",
+    qcvn_khoangcach: "Khoảng cách ATMT tối thiểu",
+    qcvn_bankinh: "Bán kính phục vụ áp dụng",
+    qcvn_summary_suffix: "điểm hẹn đạt khoảng cách ATMT ≥ 20m.",
+    unit_gio: "giờ",
+    unit_m: "m",
+
+    err_load: "Lỗi tải dữ liệu",
+    err_load_hint: "Hãy chạy web app qua một local server (xem README).",
+
+    lang_switch_label: "EN",
+  },
+
+  en: {
+    app_title: "WebGIS for Optimizing MSW Collection Routes — Thu Dau Mot Ward",
+    header_title: "WebGIS Waste Collection & Route Optimization",
+    header_subtitle: "Thu Dau Mot Ward, Ho Chi Minh City",
+    header_credit: "Nguyen Le Tan Dat · Institute of Green Technology and Sustainability",
+
+    tab_tongquan: "Overview",
+    tab_tuyen: "Routes",
+    tab_diemhen: "Meeting Points",
+    tab_toiuu: "Optimization",
+    tab_quychuan: "Compliance",
+
+    tongquan_h2: "Area Overview",
+    tongquan_h3_khuvuc: "Households & Waste Volume by Sub-area",
+    tongquan_h3_phatsinh: "Waste Generation Rate (kg/person/day)",
+    tongquan_h3_donvi: "Collection Contractor",
+    tongquan_footnote: "The administrative boundary of Thu Dau Mot Ward (accurate, post-2025 merger) is taken from the national 34-province/ward dataset. Road/POI layers come from OpenStreetMap, clipped with a buffer around the boundary, so they may extend slightly beyond the ward edge.",
+
+    stat_ho_dan: "Total Households",
+    stat_nhan_khau: "Total Population",
+    stat_dien_tich: "Natural Area",
+    stat_khoi_luong: "MSW Collected",
+    stat_mang_luoi: "Collection Fleet",
+    stat_diem_hen: "Proposed Meeting Points",
+    unit_ton_ngay: "t/day",
+    unit_ho: "households",
+    unit_kg_nguoi_ngay: "kg/person/day",
+    fleet_value: "8 vehicles / 13 trips",
+    meeting_value: "13 points",
+    gen_khoaluan: "This study (Thu Dau Mot)",
+    gen_tphcm: "Field-measured in HCMC (reference)",
+    gen_giaotrinh: "Tran Thi My Dieu textbook (2010)",
+
+    tuyen_h2: "13 Trips / 8 Compactor Trucks",
+
+    diemhen_h2: "Proposed Meeting-Point Schedule",
+    diemhen_note: "Fixed dwell time: 15 min/point (within the ≤45 min/shift limit of QCVN 01:2021/BXD).",
+    th_tuyen: "Trip",
+    th_diemhen: "Meeting Point",
+    th_den: "Arrival",
+    th_roi: "Departure",
+    th_qcvn: "QCVN",
+    diemhen_h3_sosanh: "Operational Efficiency Comparison (Table 3.5, Vehicle 1 – Trip 1 excerpt)",
+    badge_dat: "Pass",
+    badge_kiemtra: "Review",
+
+    toiuu_h2: "Route Optimization Tool (VRPTW)",
+    toiuu_note: "Runs Dijkstra on the real road network (client-side) plus a Nearest-Neighbor & 2-opt algorithm to find a shorter visiting order for the meeting points, compared against the order proposed in the source study.",
+    label_chontuyen: "Select a trip with meeting-point data:",
+    label_tocdo: "Assumed average speed (km/h):",
+    btn_toiuu: "⚡ Run Optimization",
+    toiuu_h3_benchmark: "Benchmark Against the Literature",
+    trip_options_suffix: "meeting points",
+
+    quychuan_h2: "Regulatory Basis",
+    quychuan_h3_luat: "2020 Law on Environmental Protection (No. 72/2020/QH14)",
+    quychuan_h3_kiemtra: "Compliance Check for the 13 Meeting Points",
+
+    legend_basemap_title: "Basemap",
+    basemap_osm: "Street map",
+    basemap_satellite: "Satellite",
+    basemap_light: "Light",
+    basemap_dark: "Dark",
+    legend_title: "Map Layers",
+    lyr_boundary: "Administrative boundary (accurate)",
+    lyr_roads: "Road network (OSM)",
+    lyr_routes: "13 collection routes",
+    lyr_meeting: "Meeting points + 300m buffer",
+    lyr_fixed: "Transfer / disposal stations",
+    lyr_collection: "Waste-generation points (11 groups)",
+
+    popup_khuvuc: "Sub-area",
+    popup_khunggio: "Operating window",
+    popup_quangduong: "Distance (real road network)",
+    popup_tuyenduong: "Streets",
+    popup_diemthugom: "Key collection points",
+    popup_phuong: "Ward",
+    popup_dientich: "Area",
+    popup_danso: "Population",
+    popup_matdo: "Density",
+    unit_nguoi: "people",
+    unit_nguoi_km2: "people/km²",
+    popup_tuyen: "Trip",
+    popup_gioden: "Arrival",
+    popup_dung: "Dwell",
+    popup_gioroi: "Departure",
+    popup_phut: "min",
+    popup_bankinh: "Service radius",
+    popup_khoangcach_ct: "Distance to nearest structure",
+    popup_dattqcvn: "✅ Pass",
+    popup_chuadat_qcvn: "⚠️ Needs review",
+    popup_dotincay: "Position confidence",
+    dotincay_chinhxac: "matched to a real landmark",
+    dotincay_uocluong: "estimated along the described street",
+    popup_ghichu_baidoRac: "~23 km north of the study area",
+    popup_nhom: "Category",
+
+    optimize_baseline_title: "Order proposed in the source study",
+    optimize_optimized_title: "Order after optimization",
+    optimize_thutu: "Order",
+    optimize_quangduong: "Distance",
+    optimize_thoigian: "Estimated time",
+    optimize_tietkiem: "Distance saved",
+    optimize_nhienlieu: "Fuel saved (estimate)",
+    optimize_co2: "CO₂ reduced (estimate)",
+    optimize_tooltip_baseline: "Order proposed in the source study",
+    optimize_tooltip_optimized: "Order after optimization (Nearest-Neighbor + 2-opt)",
+    unit_phut_full: "min",
+    unit_km: "km",
+    unit_lit: "L",
+    unit_kg: "kg",
+
+    compare_hientrang: "Current practice",
+    compare_dexuat: "Proposed (15-min meeting point)",
+    compare_xedo: "Truck dwell time / point",
+    compare_danhgia: "Assessment",
+    compare_tongthoigian: "Total time for 3 points",
+
+    qcvn_nguon: "Source",
+    qcvn_thoigianca: "Max operating time / shift",
+    qcvn_thoigianngay: "Max operating time / day",
+    qcvn_khoangcach: "Minimum safety distance",
+    qcvn_bankinh: "Applied service radius",
+    qcvn_summary_suffix: "meeting points meet the ≥20m safety-distance requirement.",
+    unit_gio: "hours",
+    unit_m: "m",
+
+    err_load: "Failed to load data",
+    err_load_hint: "Please run the web app via a local server (see README).",
+
+    lang_switch_label: "VI",
+  },
+};
+
+let currentLang = localStorage.getItem("webgis_lang") || "vi";
+
+function t(key) {
+  return (I18N[currentLang] && I18N[currentLang][key]) ?? I18N.vi[key] ?? key;
+}
+
+// Translates the "Xe N" / "Chuyến N" structural labels found in data values,
+// while leaving everything else (street/place names) untouched.
+function trLabel(str) {
+  if (!str) return str;
+  if (currentLang !== "en") return str;
+  return str.replace(/^Xe\b/, "Vehicle").replace(/Chuyến\b/, "Trip");
+}
+
+// Waste-generation-point category names (generic categories, not proper nouns) — safe to translate.
+const NHOM_EN = {
+  "Trường học": "School",
+  "Trường học (mầm non)": "School (kindergarten)",
+  "Chợ": "Market",
+  "Siêu thị": "Supermarket",
+  "Thương mại - dịch vụ": "Commercial / services",
+  "Khu vực hành chính": "Administrative area",
+  "Y tế": "Healthcare",
+  "Khu vực công cộng": "Public space",
+  "Cơ quan công sở": "Government office",
+};
+function trNhom(nhom) {
+  return currentLang === "en" ? NHOM_EN[nhom] || nhom : nhom;
+}
+
+// Reads a bilingual field from a data object: obj.field_en when in English mode and present,
+// otherwise falls back to the Vietnamese obj.field.
+function bi(obj, field) {
+  if (!obj) return "";
+  if (currentLang === "en" && obj[field + "_en"]) return obj[field + "_en"];
+  return obj[field];
+}
