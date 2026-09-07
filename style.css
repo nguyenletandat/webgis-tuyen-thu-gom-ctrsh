@@ -90,6 +90,7 @@ body {
 
 .panel { padding: 16px; overflow-y: auto; flex: 1; min-height: 0; }
 .panel.hidden { display: none; }
+.hidden { display: none !important; }
 .panel h2 { font-size: 15px; margin: 0 0 12px; color: var(--green-900); }
 .panel h3 { font-size: 12.5px; margin: 18px 0 8px; color: var(--green-700); text-transform: uppercase; letter-spacing: .03em; }
 .muted { color: var(--muted); font-size: 12px; }

@@ -41,15 +41,30 @@ async function fetchJSON(path) {
 }
 
 // ---------------- Basemaps ----------------
+// OPTIONAL — Google Maps basemap: Google's tiles may only be used via the official Google Maps
+// JavaScript API (raw tile-URL scraping violates Google's Terms of Service and gets blocked).
+// To enable it: (1) create an API key at https://console.cloud.google.com/google/maps-apis
+//               with the "Maps JavaScript API" enabled, (2) paste it below, (3) reload the page.
+// When empty (default), the Google option is simply not shown — no key is required otherwise.
+const GOOGLE_MAPS_API_KEY = "";
+
 const BASEMAPS = {
   osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors",
     maxZoom: 19,
   }),
-  satellite: L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    { attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics", maxZoom: 19 }
-  ),
+  // Esri World Imagery alone has no text — pair it with Esri's reference overlay so street/place
+  // names and boundaries are drawn on top of the satellite photo.
+  satellite: L.layerGroup([
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics", maxZoom: 19 }
+    ),
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 19, pane: "shadowPane" }
+    ),
+  ]),
   light: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
     maxZoom: 20,
@@ -64,6 +79,26 @@ function setBasemap(key) {
   Object.values(BASEMAPS).forEach((layer) => map.removeLayer(layer));
   (BASEMAPS[key] || BASEMAPS.osm).addTo(map);
   currentBasemapKey = key;
+}
+
+// Loads the official Google Maps JS API + the GoogleMutant Leaflet plugin, then registers
+// "google_roadmap" / "google_satellite" / "google_hybrid" basemaps. Only runs if a key is set.
+function initGoogleBasemaps() {
+  if (!GOOGLE_MAPS_API_KEY) return;
+  const gscript = document.createElement("script");
+  gscript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}`;
+  gscript.onload = () => {
+    const mutant = document.createElement("script");
+    mutant.src = "https://cdnjs.cloudflare.com/ajax/libs/Leaflet.GridLayer.GoogleMutant/0.13.5/Leaflet.GoogleMutant.min.js";
+    mutant.onload = () => {
+      BASEMAPS.google_roadmap = L.gridLayer.googleMutant({ type: "roadmap" });
+      BASEMAPS.google_satellite = L.gridLayer.googleMutant({ type: "satellite" });
+      BASEMAPS.google_hybrid = L.gridLayer.googleMutant({ type: "hybrid" });
+      document.getElementById("google-basemap-options")?.classList.remove("hidden");
+    };
+    document.head.appendChild(mutant);
+  };
+  document.head.appendChild(gscript);
 }
 
 function initMap() {
@@ -239,6 +274,11 @@ function buildLegend() {
         <label><input type="radio" name="basemap" value="satellite" ${currentBasemapKey === "satellite" ? "checked" : ""}/> <span>${t("basemap_satellite")}</span></label>
         <label><input type="radio" name="basemap" value="light" ${currentBasemapKey === "light" ? "checked" : ""}/> <span>${t("basemap_light")}</span></label>
         <label><input type="radio" name="basemap" value="dark" ${currentBasemapKey === "dark" ? "checked" : ""}/> <span>${t("basemap_dark")}</span></label>
+      </div>
+      <div class="basemap-switch ${BASEMAPS.google_roadmap ? "" : "hidden"}" id="google-basemap-options">
+        <label><input type="radio" name="basemap" value="google_roadmap" ${currentBasemapKey === "google_roadmap" ? "checked" : ""}/> <span>Google</span></label>
+        <label><input type="radio" name="basemap" value="google_satellite" ${currentBasemapKey === "google_satellite" ? "checked" : ""}/> <span>Google Sat.</span></label>
+        <label><input type="radio" name="basemap" value="google_hybrid" ${currentBasemapKey === "google_hybrid" ? "checked" : ""}/> <span>Google Hybrid</span></label>
       </div>
       <h4>${t("legend_title")}</h4>
       <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
@@ -593,6 +633,7 @@ async function main() {
   initMap();
   initTabs();
   initLanguageToggle();
+  initGoogleBasemaps();
 
   const [boundary, roads, routes, meeting, fixed, collection, stats] = await Promise.all([
     fetchJSON("data/boundary.geojson"),

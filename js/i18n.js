@@ -31,7 +31,7 @@ const I18N = {
     unit_kg_nguoi_ngay: "kg/người/ngày",
     fleet_value: "8 xe / 13 chuyến",
     meeting_value: "13 điểm",
-    gen_khoaluan: "Khóa luận (Thủ Dầu Một)",
+    gen_khoaluan: "Nghiên cứu này (Thủ Dầu Một)",
     gen_tphcm: "Đo thực tế tại TP.HCM (tham khảo)",
     gen_giaotrinh: "Giáo trình Trần Thị Mỹ Diệu (2010)",
 
@@ -49,7 +49,7 @@ const I18N = {
     badge_kiemtra: "Kiểm tra",
 
     toiuu_h2: "Công cụ tối ưu hóa tuyến (VRPTW)",
-    toiuu_note: "Chạy Dijkstra trên mạng lưới đường thật (client-side) + thuật toán Nearest-Neighbor & 2-opt để tìm thứ tự ghé các điểm hẹn ngắn hơn, so sánh với thứ tự đề xuất trong khóa luận.",
+    toiuu_note: "Chạy Dijkstra trên mạng lưới đường thật (client-side) + thuật toán Nearest-Neighbor & 2-opt để tìm thứ tự ghé các điểm hẹn ngắn hơn, so sánh với thứ tự đề xuất ban đầu.",
     label_chontuyen: "Chọn chuyến có dữ liệu điểm hẹn:",
     label_tocdo: "Tốc độ trung bình giả định (km/h):",
     btn_toiuu: "⚡ Chạy tối ưu hóa",
@@ -104,7 +104,7 @@ const I18N = {
     // Collection points popup
     popup_nhom: "Nhóm",
 
-    optimize_baseline_title: "Thứ tự đề xuất (khóa luận)",
+    optimize_baseline_title: "Thứ tự đề xuất ban đầu",
     optimize_optimized_title: "Thứ tự sau tối ưu hóa",
     optimize_thutu: "Thứ tự",
     optimize_quangduong: "Quãng đường",
@@ -112,7 +112,7 @@ const I18N = {
     optimize_tietkiem: "Tiết kiệm quãng đường",
     optimize_nhienlieu: "Nhiên liệu tiết kiệm (ước tính)",
     optimize_co2: "CO₂ giảm phát thải (ước tính)",
-    optimize_tooltip_baseline: "Thứ tự đề xuất trong khóa luận",
+    optimize_tooltip_baseline: "Thứ tự đề xuất ban đầu",
     optimize_tooltip_optimized: "Thứ tự sau tối ưu hóa (Nearest-Neighbor + 2-opt)",
     unit_phut_full: "phút",
     unit_km: "km",

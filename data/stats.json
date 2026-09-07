@@ -102,14 +102,14 @@
     "so_lieu_khoa_luan_kg_nguoi_ngay": 0.971,
     "so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay": 0.567,
     "so_lieu_giao_trinh_kg_nguoi_ngay": 0.65,
-    "ghi_chu": "Số liệu khóa luận (95,7 tấn/ngày ÷ 98.494 người ≈ 0,971 kg/người/ngày) cao hơn mức đo thực tế tham khảo tại TP.HCM (0,567) và mức dùng trong giáo trình Trần Thị Mỹ Diệu (0,65) — phù hợp vì Thủ Dầu Một là khu vực lõi đô thị có mật độ thương mại/chợ cao, không chỉ thuần dân cư.",
+    "ghi_chu": "Số liệu nghiên cứu (95,7 tấn/ngày ÷ 98.494 người ≈ 0,971 kg/người/ngày) cao hơn mức đo thực tế tham khảo tại TP.HCM (0,567) và mức dùng trong giáo trình Trần Thị Mỹ Diệu (0,65) — phù hợp vì Thủ Dầu Một là khu vực lõi đô thị có mật độ thương mại/chợ cao, không chỉ thuần dân cư.",
     "ghi_chu_en": "The source study's rate (95.7 t/day ÷ 98,494 people ≈ 0.971 kg/person/day) is higher than the reference field-measured rate in HCMC (0.567) and the rate used in the Tran Thi My Dieu textbook (0.65) — plausible since Thu Dau Mot is a dense commercial urban core, not a purely residential area."
   },
   "don_vi_thu_gom": "Công ty TNHH Thương mại dịch vụ Phúc Thịnh Design",
   "nguon_du_lieu": {
-    "khoa_luan": "Đề xuất hệ thống thu gom vận chuyển CTRSH tại phường Thủ Dầu Một, TP.HCM — Võ Huỳnh Bảo Hiền, 2026",
+    "nghien_cuu_goc": "Đề xuất hệ thống thu gom vận chuyển CTRSH tại phường Thủ Dầu Một, TP.HCM, 2026",
     "nen_duong_poi": "OpenStreetMap (Geofabrik vietnam-latest-free), clip theo bbox nghiên cứu",
     "ranh_gioi_hanh_chinh": "Bộ dữ liệu ranh giới 34 tỉnh/thành và phường/xã Việt Nam sau sáp nhập 2025 (mã xã 25747, phường Thủ Dầu Một, TP. Hồ Chí Minh)",
-    "luu_y": "Vị trí các điểm hẹn/tuyến hẻm không có tọa độ GPS gốc trong khóa luận; được tái dựng gần đúng bằng cách khớp tên đường/POI thực tế trên nền OSM. Các điểm gắn nhãn 'chinh_xac_poi' khớp trực tiếp với địa danh thực tế; nhãn 'uoc_luong_duong' là vị trí trung điểm tuyến đường được mô tả."
+    "luu_y": "Vị trí các điểm hẹn/tuyến hẻm không có tọa độ GPS gốc trong dữ liệu khảo sát ban đầu; được tái dựng gần đúng bằng cách khớp tên đường/POI thực tế trên nền OSM. Các điểm gắn nhãn 'chinh_xac_poi' khớp trực tiếp với địa danh thực tế; nhãn 'uoc_luong_duong' là vị trí trung điểm tuyến đường được mô tả."
   }
 }
