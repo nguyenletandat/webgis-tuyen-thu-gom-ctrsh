@@ -166,7 +166,7 @@ function initMap() {
 function addBoundaryLayer(geojson) {
   boundaryLayerGroup.clearLayers();
   const layer = L.geoJSON(geojson, {
-    style: { color: "#0b3d2e", weight: 2.5, dashArray: "8,5", fill: true, fillOpacity: 0.02 },
+    style: { color: "#0b3d2e", weight: 2.5, dashArray: "1,7", lineCap: "round", fill: true, fillOpacity: 0.02 },
   });
   const p = geojson.features[0]?.properties;
   if (p) {
@@ -270,7 +270,7 @@ function addCollectionPointsLayer(geojson) {
 
 // ---------------- Legend (basemap switcher + layer toggles) ----------------
 const LEGEND_ICONS = {
-  boundary: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#0b3d2e" stroke-width="2.4" stroke-dasharray="4,2.5"/></svg>`,
+  boundary: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#0b3d2e" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="0.5,4.5"/></svg>`,
   roads: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#9aa89f" stroke-width="1.6"/></svg>`,
   routes: `<svg width="22" height="14" viewBox="0 0 22 14">
       <line x1="1" y1="4" x2="8" y2="4" stroke="#e6194B" stroke-width="2.6"/>
@@ -315,12 +315,12 @@ function buildLegend() {
         <label><input type="radio" name="basemap" value="google_hybrid" ${currentBasemapKey === "google_hybrid" ? "checked" : ""}/> <span>Google Hybrid</span></label>
       </div>
       <h4>${t("legend_title")}</h4>
-      <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
       <label class="legend-row"><input type="checkbox" id="lyr-meeting" ${chk("lyr-meeting", true)}/> ${LEGEND_ICONS.meeting} <span>${t("lyr_meeting")}</span></label>
       <label class="legend-row"><input type="checkbox" id="lyr-fixed" ${chk("lyr-fixed", true)}/> ${LEGEND_ICONS.fixed} <span>${t("lyr_fixed")}</span></label>
       <label class="legend-row"><input type="checkbox" id="lyr-collection" ${chk("lyr-collection", false)}/> ${LEGEND_ICONS.collection} <span>${t("lyr_collection")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
     </div>
   `)
   );
@@ -426,6 +426,102 @@ function highlightRoute(layer) {
   layer.bringToFront();
   layer.setStyle({ weight: 7, opacity: 1 });
   highlightedRouteLayer = layer;
+}
+
+// ---------------- Dòng thời gian / Timeline ----------------
+// Domain: minutes since 17:00 (the earliest any trip starts) up to 04:00 the next day (660 min),
+// so overnight windows like "22:30–03:00" plot as one continuous span with no wraparound.
+const TIMELINE_DOMAIN_MIN = 660;
+function minutesSince17(h, m) {
+  return (((h - 17 + 24) % 24) * 60) + m;
+}
+function parseGioWindow(gio) {
+  const m = /^(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})$/.exec((gio || "").trim());
+  if (!m) return null;
+  const start = minutesSince17(+m[1], +m[2]);
+  let end = minutesSince17(+m[3], +m[4]);
+  if (end <= start) end += 24 * 60; // safety net; shouldn't trigger given the 17:00-04:00 domain
+  return { start, end };
+}
+function formatClock(minSince17) {
+  const total = (17 * 60 + minSince17) % (24 * 60);
+  const h = Math.floor(total / 60), m = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+let timelineTimer = null;
+function renderTimeline(geojson) {
+  const gantt = clear("timeline-gantt");
+  const axis = el(`<div class="timeline-axis"></div>`);
+  for (let hr = 17; hr <= 17 + Math.floor(TIMELINE_DOMAIN_MIN / 60); hr++) {
+    const pct = (((hr - 17) * 60) / TIMELINE_DOMAIN_MIN) * 100;
+    const label = `${String(hr % 24).padStart(2, "0")}:00`;
+    axis.appendChild(el(`<span style="left:${pct}%">${label}</span>`));
+  }
+  gantt.appendChild(axis);
+
+  DATA.routeWindows = {};
+  geojson.features.forEach((f) => {
+    const p = f.properties;
+    const key = `${p.xe}|${p.chuyen}`;
+    const win = parseGioWindow(p.gio);
+    DATA.routeWindows[key] = win;
+    const label = trLabel(p.xe) + (p.chuyen ? " " + trLabel(p.chuyen) : "");
+    const row = el(`<div class="timeline-row"></div>`);
+    if (win) {
+      const left = Math.max(0, Math.min(100, (win.start / TIMELINE_DOMAIN_MIN) * 100));
+      const width = Math.max(0.5, ((Math.min(win.end, TIMELINE_DOMAIN_MIN) - win.start) / TIMELINE_DOMAIN_MIN) * 100);
+      row.appendChild(el(`<div class="timeline-bar" style="left:${left}%;width:${width}%;background:${p.mau}"></div>`));
+    } else {
+      row.appendChild(el(`<div class="timeline-bar unscheduled" style="left:0;width:100%"></div>`));
+    }
+    row.appendChild(el(`<span class="timeline-row-label">${label}</span>`));
+    row.title = `${label} · ${p.gio}`;
+    gantt.appendChild(row);
+  });
+  gantt.appendChild(el(`<div class="timeline-cursor" id="timeline-cursor" style="left:0%"></div>`));
+
+  applyTimelineFilter();
+}
+
+function applyTimelineFilter() {
+  const slider = document.getElementById("time-slider");
+  const cursor = document.getElementById("timeline-cursor");
+  if (!slider || !DATA.routeWindows) return;
+  const t = +slider.value;
+  document.getElementById("time-label").textContent = formatClock(t);
+  if (cursor) cursor.style.left = `${(t / TIMELINE_DOMAIN_MIN) * 100}%`;
+
+  Object.entries(DATA.routeLayers || {}).forEach(([key, layer]) => {
+    const win = DATA.routeWindows[key];
+    const active = win && t >= win.start && t <= win.end;
+    layer.setStyle({ opacity: active ? 1 : 0.1, weight: active ? 5 : 3 });
+    if (active && layer.bringToFront) layer.bringToFront();
+  });
+}
+
+function initTimelineControls() {
+  const slider = document.getElementById("time-slider");
+  slider.addEventListener("input", applyTimelineFilter);
+
+  const playBtn = document.getElementById("timeline-play");
+  playBtn.addEventListener("click", () => {
+    if (timelineTimer) {
+      clearInterval(timelineTimer);
+      timelineTimer = null;
+      playBtn.classList.remove("playing");
+      playBtn.textContent = "▶";
+      return;
+    }
+    playBtn.classList.add("playing");
+    playBtn.textContent = "❚❚";
+    timelineTimer = setInterval(() => {
+      let v = +slider.value + 5;
+      if (v > TIMELINE_DOMAIN_MIN) v = 0;
+      slider.value = v;
+      applyTimelineFilter();
+    }, 300);
+  });
 }
 
 function renderRouteList(geojson) {
@@ -612,23 +708,6 @@ function renderOptimizeResult(result, tuyen) {
   box.appendChild(insight);
 }
 
-function renderBenchmark(stats) {
-  const b = stats.doi_chieu_y_van;
-  if (!b) return;
-  const list = clear("benchmark-list");
-  b.case_studies.forEach((c) => {
-    list.appendChild(
-      el(`
-      <div class="result-row stack">
-        <span>${c.noi}</span>
-        <span>${bi(c, "tiet_kiem")} <span class="muted">(${c.nguon})</span></span>
-      </div>
-    `)
-    );
-  });
-  document.getElementById("benchmark-note").textContent = bi(b, "nhan_dinh");
-}
-
 // ---------------- Quy chuẩn / Compliance ----------------
 function renderQuyChuan(stats, meetingGeojson) {
   const q = stats.quy_chuan;
@@ -696,10 +775,10 @@ function renderAll() {
 
   renderTongQuan(DATA.stats);
   renderRouteList(DATA.routes);
+  renderTimeline(DATA.routes);
   renderMeetingTable(DATA.meeting);
   renderCompareTable(DATA.stats);
   renderQuyChuan(DATA.stats, DATA.meeting);
-  renderBenchmark(DATA.stats);
   populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);
 }
 
@@ -723,6 +802,7 @@ async function main() {
   initTabs();
   initLanguageToggle();
   initGoogleBasemaps();
+  initTimelineControls();
 
   const [boundary, roads, routes, meeting, fixed, collection, stats, routeStops] = await Promise.all([
     fetchJSON("data/boundary.geojson"),
@@ -750,10 +830,10 @@ async function main() {
   applyStaticI18n();
   renderTongQuan(stats);
   renderRouteList(routes);
+  renderTimeline(routes);
   renderMeetingTable(meeting);
   renderCompareTable(stats);
   renderQuyChuan(stats, meeting);
-  renderBenchmark(stats);
 
   await RoadGraph.load("data/graph.json");
   populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);

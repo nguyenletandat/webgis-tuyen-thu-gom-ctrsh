@@ -36,6 +36,8 @@ const I18N = {
     gen_giaotrinh: "Giáo trình Trần Thị Mỹ Diệu (2010)",
 
     tuyen_h2: "13 chuyến / 8 xe ép rác",
+    timeline_h3: "Dòng thời gian hoạt động",
+    timeline_note: "Kéo thanh trượt (hoặc bấm ▶) để xem những xe nào đang hoạt động tại một thời điểm bất kỳ trong ca làm việc.",
 
     diemhen_h2: "Lịch trình điểm hẹn (đề xuất)",
     diemhen_note: "Định mức dừng cố định: 15 phút/điểm (trong giới hạn ≤ 45 phút/ca theo QCVN 01:2021/BXD).",
@@ -53,7 +55,6 @@ const I18N = {
     label_chontuyen: "Chọn chuyến có dữ liệu điểm hẹn:",
     label_tocdo: "Tốc độ trung bình giả định (km/h):",
     btn_toiuu: "⚡ Chạy tối ưu hóa",
-    toiuu_h3_benchmark: "Đối chiếu mức tiết kiệm trong y văn",
     trip_options_suffix: "điểm hẹn",
     trip_options_suffix_gen: "điểm phát sinh rác",
     optgroup_official: "Điểm hẹn chính thức (theo giờ)",
@@ -179,6 +180,8 @@ const I18N = {
     gen_giaotrinh: "Tran Thi My Dieu textbook (2010)",
 
     tuyen_h2: "13 Trips / 8 Compactor Trucks",
+    timeline_h3: "Operating Timeline",
+    timeline_note: "Drag the slider (or press ▶) to see which vehicles are active at any point during the shift.",
 
     diemhen_h2: "Proposed Meeting-Point Schedule",
     diemhen_note: "Fixed dwell time: 15 min/point (within the ≤45 min/shift limit of QCVN 01:2021/BXD).",
@@ -196,7 +199,6 @@ const I18N = {
     label_chontuyen: "Select a trip with meeting-point data:",
     label_tocdo: "Assumed average speed (km/h):",
     btn_toiuu: "⚡ Run Optimization",
-    toiuu_h3_benchmark: "Benchmark Against the Literature",
     trip_options_suffix: "meeting points",
     trip_options_suffix_gen: "waste-generation points",
     optgroup_official: "Official meeting points (scheduled)",

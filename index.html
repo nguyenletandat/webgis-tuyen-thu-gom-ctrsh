@@ -53,6 +53,14 @@
 
       <div class="panel hidden" id="panel-tuyen">
         <h2 data-i18n="tuyen_h2">13 chuyến / 8 xe ép rác</h2>
+        <h3 data-i18n="timeline_h3">Dòng thời gian hoạt động</h3>
+        <p class="muted" data-i18n="timeline_note">Kéo thanh trượt để xem những xe nào đang hoạt động tại một thời điểm bất kỳ trong ca làm việc.</p>
+        <div class="timeline-controls">
+          <button id="timeline-play" title="Play/Pause">▶</button>
+          <input type="range" id="time-slider" min="0" max="660" step="5" value="60" />
+          <span id="time-label" class="timeline-time">18:00</span>
+        </div>
+        <div id="timeline-gantt" class="timeline-gantt"></div>
         <div id="route-list"></div>
       </div>
 
@@ -84,9 +92,6 @@
         </label>
         <button id="btn-optimize" data-i18n="btn_toiuu">⚡ Chạy tối ưu hóa</button>
         <div id="optimize-result"></div>
-        <h3 data-i18n="toiuu_h3_benchmark">Đối chiếu mức tiết kiệm trong y văn</h3>
-        <div id="benchmark-list"></div>
-        <p class="footnote" id="benchmark-note"></p>
       </div>
 
       <div class="panel hidden" id="panel-quychuan">
