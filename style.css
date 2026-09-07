@@ -221,6 +221,10 @@ th { color: var(--muted); font-weight: 600; }
 
 .emoji-marker { background: none; border: none; }
 
+.insight-box { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; line-height: 1.5; }
+.insight-box.insight-good { background: #e6f6ec; border: 1px solid #1c9457; color: #0b3d2e; }
+.insight-box.insight-neutral { background: #fff8e6; border: 1px solid #e0912b; color: #6b4a10; }
+
 /* Animated "flow" on route lines to show direction of vehicle travel */
 .route-flow {
   stroke-dasharray: 10 8;

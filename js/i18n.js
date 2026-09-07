@@ -55,6 +55,11 @@ const I18N = {
     btn_toiuu: "⚡ Chạy tối ưu hóa",
     toiuu_h3_benchmark: "Đối chiếu mức tiết kiệm trong y văn",
     trip_options_suffix: "điểm hẹn",
+    trip_options_suffix_gen: "điểm phát sinh rác",
+    optgroup_official: "Điểm hẹn chính thức (theo giờ)",
+    optgroup_generation: "Điểm phát sinh rác dọc tuyến",
+    insight_improved: "✓ Tìm được thứ tự ngắn hơn — mạng lưới điểm dừng của tuyến này có thể sắp xếp lại để tiết kiệm quãng đường/nhiên liệu như trên.",
+    insight_already_optimal: "ℹ️ Thứ tự hiện tại đã gần tối ưu về mặt không gian (0% cải thiện thêm). Với các tuyến ngắn/ít điểm dừng, đây là kết quả bình thường — nó xác nhận rằng nút thắt chính không nằm ở quãng đường, mà ở việc đồng bộ thời gian giữa xe thô sơ và xe cơ giới (xem mô hình \"điểm hẹn\" ở tab Quy chuẩn).",
 
     quychuan_h2: "Căn cứ quy chuẩn",
     quychuan_h3_luat: "Luật Bảo vệ môi trường 2020 (72/2020/QH14)",
@@ -193,6 +198,11 @@ const I18N = {
     btn_toiuu: "⚡ Run Optimization",
     toiuu_h3_benchmark: "Benchmark Against the Literature",
     trip_options_suffix: "meeting points",
+    trip_options_suffix_gen: "waste-generation points",
+    optgroup_official: "Official meeting points (scheduled)",
+    optgroup_generation: "Waste-generation points along route",
+    insight_improved: "✓ Found a shorter visiting order — this trip's stops can be resequenced for the distance/fuel savings shown above.",
+    insight_already_optimal: "ℹ️ The current order is already close to spatially optimal (0% further improvement). For short trips with few stops this is a normal, expected result — it confirms the main bottleneck is not distance but the timing coordination between handcarts and the compactor truck (see the \"meeting-point\" model in the Compliance tab).",
 
     quychuan_h2: "Regulatory Basis",
     quychuan_h3_luat: "2020 Law on Environmental Protection (No. 72/2020/QH14)",

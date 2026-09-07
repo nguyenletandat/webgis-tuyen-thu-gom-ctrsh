@@ -412,6 +412,22 @@ function renderTongQuan(stats) {
 }
 
 // ---------------- Tuyến thu gom / Routes ----------------
+let highlightedRouteLayer = null;
+function highlightRoute(layer) {
+  if (highlightedRouteLayer && highlightedRouteLayer !== layer) {
+    highlightedRouteLayer.setStyle({ weight: 4, opacity: 0.85 });
+  }
+  // make sure the routes layer itself is switched on, then bring this one to the very front
+  if (!map.hasLayer(routesLayerGroup)) {
+    map.addLayer(routesLayerGroup);
+    const box = document.getElementById("lyr-routes");
+    if (box) box.checked = true;
+  }
+  layer.bringToFront();
+  layer.setStyle({ weight: 7, opacity: 1 });
+  highlightedRouteLayer = layer;
+}
+
 function renderRouteList(geojson) {
   const list = clear("route-list");
   geojson.features.forEach((f) => {
@@ -429,6 +445,7 @@ function renderRouteList(geojson) {
       const layer = DATA.routeLayers[key];
       if (layer) {
         map.fitBounds(layer.getBounds(), { maxZoom: 16 });
+        highlightRoute(layer);
         layer.openPopup();
       }
     });
@@ -491,32 +508,65 @@ function groupMeetingPointsByTrip(geojson) {
   return groups;
 }
 
-function populateTripSelect(groups) {
+// "Xe 1|Chuyến 1" -> "Xe 1 - Chuyến 1"; "Xe 6|" -> "Xe 6" (single-trip vehicles have no chuyến).
+function formatTripKey(key) {
+  const [xe, chuyen] = key.split("|");
+  return chuyen ? `${xe} - ${chuyen}` : xe;
+}
+
+// Looks up the stop list for a "meet:<tuyen>" or "gen:<xe>|<chuyen>" select value.
+function stopsForSelectValue(value) {
+  if (!value) return null;
+  const sep = value.indexOf(":");
+  const kind = value.slice(0, sep);
+  const key = value.slice(sep + 1);
+  if (kind === "meet") return { stops: DATA.tripGroups[key], label: key };
+  if (kind === "gen") return { stops: DATA.routeStopGroups[key], label: formatTripKey(key) };
+  return null;
+}
+
+function populateTripSelect(meetGroups, routeStopGroups) {
   const select = document.getElementById("select-trip");
   const prevValue = select.value;
   clear(select);
-  Object.entries(groups).forEach(([tuyen, stops]) => {
+
+  const og1 = document.createElement("optgroup");
+  og1.label = t("optgroup_official");
+  Object.entries(meetGroups).forEach(([tuyen, stops]) => {
     if (stops.length < 2) return;
     const opt = document.createElement("option");
-    opt.value = tuyen;
+    opt.value = `meet:${tuyen}`;
     opt.textContent = `${trLabel(tuyen)} (${stops.length} ${t("trip_options_suffix")})`;
-    select.appendChild(opt);
+    og1.appendChild(opt);
   });
+  select.appendChild(og1);
+
+  const og2 = document.createElement("optgroup");
+  og2.label = t("optgroup_generation");
+  Object.entries(routeStopGroups).forEach(([key, stops]) => {
+    if (stops.length < 2) return;
+    const opt = document.createElement("option");
+    opt.value = `gen:${key}`;
+    opt.textContent = `${trLabel(formatTripKey(key))} (${stops.length} ${t("trip_options_suffix_gen")})`;
+    og2.appendChild(opt);
+  });
+  select.appendChild(og2);
+
   if ([...select.options].some((o) => o.value === prevValue)) select.value = prevValue;
 }
 
-function initOptimizeControls(groups) {
+function initOptimizeControls() {
   const speedSlider = document.getElementById("speed-slider");
   const speedVal = document.getElementById("speed-val");
   speedSlider.addEventListener("input", () => (speedVal.textContent = speedSlider.value));
 
   document.getElementById("btn-optimize").addEventListener("click", () => {
-    const tuyen = document.getElementById("select-trip").value;
-    const stops = DATA.tripGroups[tuyen];
-    if (!stops || stops.length < 2) return;
+    const value = document.getElementById("select-trip").value;
+    const picked = stopsForSelectValue(value);
+    if (!picked || !picked.stops || picked.stops.length < 2) return;
     const speed = parseFloat(speedSlider.value);
-    const result = RouteOptimizer.optimize(stops, 0, speed);
-    renderOptimizeResult(result, tuyen);
+    const result = RouteOptimizer.optimize(picked.stops, 0, speed);
+    renderOptimizeResult(result, picked.label);
   });
 }
 
@@ -555,6 +605,11 @@ function renderOptimizeResult(result, tuyen) {
     </div>
   `)
   );
+
+  const insight = el(`<div class="insight-box ${better ? "insight-good" : "insight-neutral"}">${
+    better ? t("insight_improved") : t("insight_already_optimal")
+  }</div>`);
+  box.appendChild(insight);
 }
 
 function renderBenchmark(stats) {
@@ -645,7 +700,7 @@ function renderAll() {
   renderCompareTable(DATA.stats);
   renderQuyChuan(DATA.stats, DATA.meeting);
   renderBenchmark(DATA.stats);
-  populateTripSelect(DATA.tripGroups);
+  populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);
 }
 
 function setLanguage(lang) {
@@ -669,7 +724,7 @@ async function main() {
   initLanguageToggle();
   initGoogleBasemaps();
 
-  const [boundary, roads, routes, meeting, fixed, collection, stats] = await Promise.all([
+  const [boundary, roads, routes, meeting, fixed, collection, stats, routeStops] = await Promise.all([
     fetchJSON("data/boundary.geojson"),
     fetchJSON("data/roads.geojson"),
     fetchJSON("data/routes.geojson"),
@@ -677,9 +732,11 @@ async function main() {
     fetchJSON("data/fixed_points.geojson"),
     fetchJSON("data/collection_points.geojson"),
     fetchJSON("data/stats.json"),
+    fetchJSON("data/route_stops.json"),
   ]);
   Object.assign(DATA, { boundary, roads, routes, meeting, fixed, collection, stats });
   DATA.tripGroups = groupMeetingPointsByTrip(meeting);
+  DATA.routeStopGroups = routeStops;
 
   const boundaryLayer = addBoundaryLayer(boundary);
   map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20] });
@@ -699,8 +756,8 @@ async function main() {
   renderBenchmark(stats);
 
   await RoadGraph.load("data/graph.json");
-  populateTripSelect(DATA.tripGroups);
-  initOptimizeControls(DATA.tripGroups);
+  populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);
+  initOptimizeControls();
 }
 
 main().catch((err) => {
