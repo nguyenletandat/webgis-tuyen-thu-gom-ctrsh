@@ -1,0 +1,100 @@
+{
+  "dan_so": {
+    "tong_ho_dan": 29466,
+    "tong_nhan_khau": 98494,
+    "dien_tich_km2": 15.682,
+    "khu_vuc": [
+      {"ten": "Phú Cường (cũ)", "ho_dan": 6220, "xe": ["Xe 1", "Xe 2"]},
+      {"ten": "Chánh Nghĩa (cũ)", "ho_dan": 10183, "xe": ["Xe 3", "Xe 4", "Xe 5"]},
+      {"ten": "Phú Thọ (cũ)", "ho_dan": 8517, "xe": ["Xe 6", "Xe 7", "Xe 8"]}
+    ]
+  },
+  "khoi_luong_rac": {
+    "ghi_chu": "Bảng 3.1 & 3.2 - Kế hoạch, khối lượng và cự ly vận chuyển năm 2025",
+    "khu_vuc": [
+      {
+        "ten": "Phú Cường (cũ)", "xe": "Xe 1, 2", "cu_ly_km": "15-20",
+        "khoi_luong_tan_nam": 8407.41, "don_gia_dong_tan": 128816,
+        "ho_dan": 6220, "khoi_luong_tan_ngay_tong": 25.65,
+        "khoi_luong_tuyen_chinh": 23.4, "khoi_luong_tuyen_hem": 2.25
+      },
+      {
+        "ten": "Chánh Nghĩa (cũ)", "xe": "Xe 3, 4, 5", "cu_ly_km": "15-20",
+        "khoi_luong_tan_nam": 11249.3, "don_gia_dong_tan": 128816,
+        "ho_dan": 10183, "khoi_luong_tan_ngay_tong": 49.74,
+        "khoi_luong_tuyen_chinh": 32.4, "khoi_luong_tuyen_hem": 17.34
+      },
+      {
+        "ten": "Phú Thọ (cũ)", "xe": "Xe 6, 7, 8", "cu_ly_km": "15-20",
+        "khoi_luong_tan_nam": 8209, "don_gia_dong_tan": 128816,
+        "ho_dan": 8517, "khoi_luong_tan_ngay_tong": 20.26,
+        "khoi_luong_tuyen_chinh": 6.53, "khoi_luong_tuyen_hem": 13.73
+      }
+    ]
+  },
+  "thoi_gian_van_hanh": [
+    {"xe": "Xe 1", "chuyen_1": "4h/ngày", "chuyen_2": "4h30p/ngày"},
+    {"xe": "Xe 2", "chuyen_1": "4h/ngày", "chuyen_2": "4h30p/ngày"},
+    {"xe": "Xe 3", "chuyen_1": "5h15p/ngày", "chuyen_2": "4h30p/ngày"},
+    {"xe": "Xe 4", "chuyen_1": "5h30p/ngày", "chuyen_2": "3h30p/ngày"},
+    {"xe": "Xe 5", "chuyen_1": "5h30p/ngày", "chuyen_2": "3h30p/ngày"},
+    {"xe": "Xe 6", "chuyen_1": "1h30p/ngày", "chuyen_2": null},
+    {"xe": "Xe 7", "chuyen_1": "3h30p/ngày", "chuyen_2": null},
+    {"xe": "Xe 8", "chuyen_1": "1h30p/ngày", "chuyen_2": null}
+  ],
+  "so_sanh_hien_trang_de_xuat": {
+    "ghi_chu": "Bảng 3.5 - Trích xuất Xe 1, Chuyến 1 (3 điểm hẹn)",
+    "hien_trang": {
+      "thoi_gian_xe_do_1_diem": "Không xác định (chờ xe thô sơ nạp rác)",
+      "thoi_gian_luu_rac": "Lâu, không kiểm soát (xe thô sơ ra trước / xe tải đến trễ hoặc ngược lại)",
+      "tong_thoi_gian_hoan_thanh_3_diem": "Kéo dài không xác định",
+      "danh_gia": "Phát sinh thời gian chờ Tchờ_đợi > 0, gây ùn tắc, tốn nhiên liệu chạy không tải"
+    },
+    "de_xuat": {
+      "thoi_gian_xe_do_1_diem_phut": 15,
+      "thoi_gian_luu_rac": "Dưới 15 phút (đồng bộ thô sơ - cơ giới)",
+      "tong_thoi_gian_hoan_thanh_3_diem_phut": 75,
+      "danh_gia": "Triệt tiêu thời gian chờ (Tchờ_đợi ≈ 0), tối ưu năng suất và chi phí vận hành"
+    }
+  },
+  "quy_chuan": {
+    "nguon": "QCVN 01:2021/BXD (Thông tư 01/2021/TT-BXD), mục 2.12.2 & 2.12.4",
+    "tram_trung_chuyen_khong_co_dinh": {
+      "thoi_gian_van_hanh_toi_da_phut_ca": 45,
+      "thoi_gian_van_hanh_toi_da_h_ngay": 3,
+      "khoang_cach_atmt_toi_thieu_m": 20
+    },
+    "ban_kinh_phuc_vu_de_xuat_m": 300,
+    "ghi_chu": "Đồ án áp dụng mức 15 phút/điểm hẹn — nằm trong giới hạn cho phép (≤45 phút/ca) của QCVN 01:2021/BXD; khoảng cách tối thiểu tới công trình xây dựng ≥ 20 m.",
+    "luat_bvmt_2020": [
+      {"dieu": "Điều 76", "noi_dung": "Điểm tập kết, trạm trung chuyển CTRSH phải bố trí khu vực lưu giữ riêng biệt cho từng loại chất thải đã phân loại, không để lẫn."},
+      {"dieu": "Điều 79", "noi_dung": "Giá dịch vụ thu gom, vận chuyển tính theo khối lượng/thể tích chất thải đã phân loại; chất thải tái chế/nguy hại đã phân loại đúng quy định không phải chi trả giá dịch vụ; hộ gia đình không phân loại phải trả theo mức chất thải sinh hoạt khác. Áp dụng chậm nhất từ 31/12/2024."},
+      {"dieu": "Điều 72", "noi_dung": "Quản lý xuyên suốt vòng đời chất thải; phương tiện thu gom, vận chuyển phải đáp ứng yêu cầu kỹ thuật riêng theo từng loại CTR đã phân loại."}
+    ]
+  },
+  "doi_chieu_y_van": {
+    "ghi_chu": "Tổng hợp từ các nghiên cứu ứng dụng GIS/Network Analysis tối ưu tuyến thu gom CTRSH (trong nước & quốc tế) — dùng để đối chiếu mức tiết kiệm mà công cụ tối ưu hóa của WebGIS tính ra cho từng tuyến.",
+    "case_studies": [
+      {"noi": "Đồng Hới, Việt Nam", "tiet_kiem": "−40,5% quãng đường · −57% thời gian · −40% nhân công · −48% năng lượng", "nguon": "Nghiên cứu GIS tiếng Việt (Lê Thu Quỳnh và cộng sự)"},
+      {"noi": "Lucknow, Ấn Độ", "tiet_kiem": "−36,2% ± 12,6% quãng đường vận chuyển (từng tuyến: −27,9% đến −64,5%)", "nguon": "AGIS-based Route Optimization / IJEP 2022"},
+      {"noi": "Ipoh, Malaysia", "tiet_kiem": "−22% chiều dài tuyến · −34% thời gian thu gom", "nguon": "Elsevier, 2014"},
+      {"noi": "Al Ain, UAE", "tiet_kiem": "−14,3% nhiên liệu (mô hình đa mục tiêu)", "nguon": "Cairo case study, arXiv 2209.02652"},
+      {"noi": "Barreiro, Bồ Đào Nha", "tiet_kiem": "−43% nhiên liệu (VRP 3D có xét độ dốc)", "nguon": "Zsigraiova et al., dẫn lại trong Sustainability 2024"},
+      {"noi": "Migori, Kenya", "tiet_kiem": "−30% nhiên liệu", "nguon": "Sustainability 2024 (review)"}
+    ],
+    "nhan_dinh": "Mức tiết kiệm 10–40% quãng đường/nhiên liệu là phổ biến khi áp dụng GIS Network Analysis (chủ yếu Dijkstra/shortest-path) cho tuyến thu gom CTRSH — tương đồng phương pháp Dijkstra + 2-opt mà WebGIS này áp dụng. Trường hợp Đồng Hới (Việt Nam) là mốc đối chiếu gần bối cảnh nhất."
+  },
+  "chi_tieu_phat_sinh_doi_chieu": {
+    "so_lieu_khoa_luan_kg_nguoi_ngay": 0.971,
+    "so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay": 0.567,
+    "so_lieu_giao_trinh_kg_nguoi_ngay": 0.65,
+    "ghi_chu": "Số liệu khóa luận (95,7 tấn/ngày ÷ 98.494 người ≈ 0,971 kg/người/ngày) cao hơn mức đo thực tế tham khảo tại TP.HCM (0,567) và mức dùng trong giáo trình Trần Thị Mỹ Diệu (0,65) — phù hợp vì Thủ Dầu Một là khu vực lõi đô thị có mật độ thương mại/chợ cao, không chỉ thuần dân cư."
+  },
+  "don_vi_thu_gom": "Công ty TNHH Thương mại dịch vụ Phúc Thịnh Design",
+  "nguon_du_lieu": {
+    "khoa_luan": "Đề xuất hệ thống thu gom vận chuyển CTRSH tại phường Thủ Dầu Một, TP.HCM — Võ Huỳnh Bảo Hiền, 2026",
+    "nen_duong_poi": "OpenStreetMap (Geofabrik vietnam-latest-free), clip theo bbox nghiên cứu",
+    "ranh_gioi_hanh_chinh": "Bộ dữ liệu ranh giới 34 tỉnh/thành và phường/xã Việt Nam sau sáp nhập 2025 (mã xã 25747, phường Thủ Dầu Một, TP. Hồ Chí Minh)",
+    "luu_y": "Vị trí các điểm hẹn/tuyến hẻm không có tọa độ GPS gốc trong khóa luận; được tái dựng gần đúng bằng cách khớp tên đường/POI thực tế trên nền OSM. Các điểm gắn nhãn 'chinh_xac_poi' khớp trực tiếp với địa danh thực tế; nhãn 'uoc_luong_duong' là vị trí trung điểm tuyến đường được mô tả."
+  }
+}
