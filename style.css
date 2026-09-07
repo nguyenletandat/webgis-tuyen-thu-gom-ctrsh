@@ -219,6 +219,8 @@ th { color: var(--muted); font-weight: 600; }
 }
 .leaflet-popup-tip { background: rgba(255, 255, 255, 0.82); }
 
+.emoji-marker { background: none; border: none; }
+
 /* Animated "flow" on route lines to show direction of vehicle travel */
 .route-flow {
   stroke-dasharray: 10 8;

@@ -19,6 +19,32 @@ let optimizeLayerGroup, boundaryLayerGroup;
 let DATA = {};
 let currentBasemapKey = "osm";
 
+// Emoji markers instead of plain circles/squares — self-explanatory at a glance, no icon
+// image assets or extra libraries needed (emoji render crisply as vector glyphs at any zoom).
+const NHOM_ICONS = {
+  "Trường học": "🏫",
+  "Trường học (mầm non)": "🧸",
+  "Chợ": "🛒",
+  "Siêu thị": "🏪",
+  "Thương mại - dịch vụ": "🏬",
+  "Khu vực hành chính": "🏛️",
+  "Y tế": "🏥",
+  "Khu vực công cộng": "🌳",
+  "Cơ quan công sở": "🏢",
+};
+function emojiIcon(emoji, bgColor, size = 26) {
+  return L.divIcon({
+    html: `<div style="
+      width:${size}px;height:${size}px;line-height:${size}px;text-align:center;
+      background:${bgColor};border:2px solid #fff;border-radius:50%;
+      box-shadow:0 1px 4px rgba(0,0,0,.4);font-size:${size * 0.6}px;">${emoji}</div>`,
+    className: "emoji-marker",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
+  });
+}
+
 function el(html) {
   // Returns a single Element when the template has exactly one top-level element
   // (so callers can attach listeners to it), otherwise returns the DocumentFragment
@@ -48,31 +74,46 @@ async function fetchJSON(path) {
 // When empty (default), the Google option is simply not shown — no key is required otherwise.
 const GOOGLE_MAPS_API_KEY = "";
 
+// NOTE: CARTO's free "basemaps.cartocdn.com" tiles (Positron/Dark Matter/Voyager) now require a
+// CARTO account API key — anonymous requests return a placeholder "API KEY REQUIRED" tile image
+// (HTTP 200, but not an actual map). All basemaps below instead use Esri's ArcGIS Online tile
+// services, which remain free and keyless for this kind of use, same server family as the
+// satellite layer.
+const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services";
 const BASEMAPS = {
-  osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap contributors",
+  // Esri World Street Map: full-color streets with clear road/place labels — a much richer look
+  // than plain OSM raster tiles, no API key required.
+  osm: L.tileLayer(`${ESRI}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`, {
+    attribution: "Tiles &copy; Esri — Source: Esri, HERE, Garmin, USGS, NGA, EPA, USDA",
     maxZoom: 19,
   }),
   // Esri World Imagery alone has no text — pair it with Esri's reference overlay so street/place
   // names and boundaries are drawn on top of the satellite photo.
   satellite: L.layerGroup([
-    L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics", maxZoom: 19 }
-    ),
-    L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-      { maxZoom: 19, pane: "shadowPane" }
-    ),
+    L.tileLayer(`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, {
+      attribution: "Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics",
+      maxZoom: 19,
+    }),
+    L.tileLayer(`${ESRI}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}`, {
+      maxZoom: 19,
+      pane: "shadowPane",
+    }),
   ]),
-  light: L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-    maxZoom: 20,
-  }),
-  dark: L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-    maxZoom: 20,
-  }),
+  // Esri light/dark "Canvas" basemaps: muted background + a separate reference layer with labels.
+  light: L.layerGroup([
+    L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
+      attribution: "Tiles &copy; Esri",
+      maxZoom: 16,
+    }),
+    L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16 }),
+  ]),
+  dark: L.layerGroup([
+    L.tileLayer(`${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
+      attribution: "Tiles &copy; Esri",
+      maxZoom: 16,
+    }),
+    L.tileLayer(`${ESRI}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 16 }),
+  ]),
 };
 
 function setBasemap(key) {
@@ -177,12 +218,8 @@ function addMeetingPointsLayer(geojson) {
       fillOpacity: 0.08,
     }).addTo(meetingLayerGroup);
 
-    const dot = L.circleMarker([lat, lon], {
-      radius: 7,
-      color: "#fff",
-      weight: 1.5,
-      fillColor: ok ? "#c0392b" : "#e0912b",
-      fillOpacity: 1,
+    const dot = L.marker([lat, lon], {
+      icon: emojiIcon("⏰", ok ? "#c0392b" : "#e0912b", 24),
     });
     const confidence = p.do_tin_cay_vi_tri === "chinh_xac_poi" ? t("dotincay_chinhxac") : t("dotincay_uocluong");
     dot.bindPopup(`
@@ -204,12 +241,8 @@ function addFixedPointsLayer(geojson) {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const isDump = p.loai.includes("đổ rác");
-    const marker = L.circleMarker([lat, lon], {
-      radius: 10,
-      color: "#fff",
-      weight: 2,
-      fillColor: isDump ? "#000075" : "#9A6324",
-      fillOpacity: 1,
+    const marker = L.marker([lat, lon], {
+      icon: emojiIcon(isDump ? "🏭" : "🗑️", isDump ? "#000075" : "#9A6324", 30),
     });
     marker.bindPopup(`<b>${p.name}</b><br/>${p.loai}` + (isDump ? `<br/><i>${t("popup_ghichu_baidoRac")}</i>` : ""));
     marker.addTo(fixedLayerGroup);
@@ -222,7 +255,8 @@ function addCollectionPointsLayer(geojson) {
     const p = f.properties;
     const [lon, lat] = f.geometry.coordinates;
     const color = NHOM_COLORS[p.nhom] || "#777";
-    const marker = L.circleMarker([lat, lon], { radius: 4, color, weight: 1, fillColor: color, fillOpacity: 0.7 });
+    const icon = NHOM_ICONS[p.nhom] || "📍";
+    const marker = L.marker([lat, lon], { icon: emojiIcon(icon, color, 20) });
     marker.bindPopup(`<b>${p.name}</b><br/>${t("popup_nhom")}: ${trNhom(p.nhom)}`);
     marker.addTo(collectionLayerGroup);
   });
@@ -239,17 +273,9 @@ const LEGEND_ICONS = {
     </svg>`,
   meeting: `<svg width="22" height="14" viewBox="0 0 22 14">
       <circle cx="11" cy="7" r="6.5" fill="#3cb44b" fill-opacity="0.18" stroke="#3cb44b" stroke-width="1"/>
-      <circle cx="11" cy="7" r="3" fill="#c0392b" stroke="#fff" stroke-width="1"/>
-    </svg>`,
-  fixed: `<svg width="22" height="14" viewBox="0 0 22 14">
-      <rect x="2" y="3" width="8" height="8" fill="#9A6324" stroke="#fff" stroke-width="1"/>
-      <rect x="12" y="3" width="8" height="8" fill="#000075" stroke="#fff" stroke-width="1"/>
-    </svg>`,
-  collection: `<svg width="22" height="14" viewBox="0 0 22 14">
-      <circle cx="5" cy="10" r="2.6" fill="#3366cc"/>
-      <circle cx="12" cy="4" r="2.6" fill="#e6194B"/>
-      <circle cx="18" cy="10" r="2.6" fill="#3cb44b"/>
-    </svg>`,
+    </svg><span style="margin-left:-16px;font-size:13px;">⏰</span>`,
+  fixed: `<span style="font-size:15px;">🗑️🏭</span>`,
+  collection: `<span style="font-size:13px;">🏫🛒🏥</span>`,
 };
 
 // remember which overlay checkboxes are checked across a legend rebuild (language switch)
