@@ -6,7 +6,7 @@ const I18N = {
     app_title: "WebGIS Tối ưu hóa Tuyến Thu gom CTRSH — Phường Thủ Dầu Một",
     header_title: "WebGIS Thu gom & Tối ưu hóa Tuyến CTRSH",
     header_subtitle: "Phường Thủ Dầu Một, Thành phố Hồ Chí Minh",
-    header_credit: "Nguyễn Lê Tấn Đạt · Viện Công nghệ Xanh và Bền vững",
+    header_credit: "Nguyễn Lê Tấn Đạt, Bùi Phạm Phương Thanh · Viện Công nghệ Xanh và Bền vững",
 
     tab_tongquan: "Tổng quan",
     tab_tuyen: "Tuyến thu gom",
@@ -150,7 +150,7 @@ const I18N = {
     app_title: "WebGIS for Optimizing MSW Collection Routes — Thu Dau Mot Ward",
     header_title: "WebGIS Waste Collection & Route Optimization",
     header_subtitle: "Thu Dau Mot Ward, Ho Chi Minh City",
-    header_credit: "Nguyen Le Tan Dat · Institute of Green Technology and Sustainability",
+    header_credit: "Nguyen Le Tan Dat, Bui Pham Phuong Thanh · Institute of Green Technology and Sustainability",
 
     tab_tongquan: "Overview",
     tab_tuyen: "Routes",
