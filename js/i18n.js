@@ -18,7 +18,7 @@ const I18N = {
     tongquan_h3_khuvuc: "Hộ dân & khối lượng rác theo khu vực",
     tongquan_h3_phatsinh: "Chỉ tiêu phát sinh rác (kg/người/ngày)",
     tongquan_h3_donvi: "Đơn vị thu gom",
-    tongquan_footnote: "Ranh giới hành chính phường Thủ Dầu Một (chính xác, sau sáp nhập 2025) trích từ bộ dữ liệu 34 tỉnh/thành. Lớp đường/POI lấy từ OpenStreetMap, cắt theo vùng đệm quanh ranh giới nên có thể vượt nhẹ ra ngoài mép phường.",
+    tongquan_footnote: "Ranh giới trên bản đồ đã hợp nhất toàn bộ phường Chánh Mỹ (cũ, dữ liệu 63 tỉnh/thành trước sáp nhập) với ranh giới phường Thủ Dầu Một mới (dữ liệu 34 tỉnh/thành) để thể hiện đầy đủ hơn về mặt địa lý — diện tích hiển thị trên bản đồ do đó lớn hơn 15,682 km². Các số liệu dân số/hộ dân/khối lượng rác ở trên vẫn theo đúng phạm vi phường chính thức (chỉ gồm một phần Chánh Mỹ) như trong dữ liệu khảo sát gốc, nên không cộng dồn theo ranh giới mở rộng này. Lớp đường/POI lấy từ OpenStreetMap.",
 
     stat_ho_dan: "Tổng hộ dân",
     stat_nhan_khau: "Tổng nhân khẩu",
@@ -156,7 +156,7 @@ const I18N = {
     tongquan_h3_khuvuc: "Households & Waste Volume by Sub-area",
     tongquan_h3_phatsinh: "Waste Generation Rate (kg/person/day)",
     tongquan_h3_donvi: "Collection Contractor",
-    tongquan_footnote: "The administrative boundary of Thu Dau Mot Ward (accurate, post-2025 merger) is taken from the national 34-province/ward dataset. Road/POI layers come from OpenStreetMap, clipped with a buffer around the boundary, so they may extend slightly beyond the ward edge.",
+    tongquan_footnote: "The boundary shown on the map merges the full former Chanh My ward (pre-2025, 63-province dataset) with the new Thu Dau Mot ward boundary (34-province dataset) for a more complete geographic picture — so the mapped area is larger than 15.682 km². The population/household/waste figures above still reflect the official ward scope (only part of Chanh My) from the original survey data, and are not adjusted to this larger boundary. Road/POI layers come from OpenStreetMap.",
 
     stat_ho_dan: "Total Households",
     stat_nhan_khau: "Total Population",
