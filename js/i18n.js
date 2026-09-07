@@ -18,7 +18,7 @@ const I18N = {
     tongquan_h3_khuvuc: "Hộ dân & khối lượng rác theo khu vực",
     tongquan_h3_phatsinh: "Chỉ tiêu phát sinh rác (kg/người/ngày)",
     tongquan_h3_donvi: "Đơn vị thu gom",
-    tongquan_footnote: "Ranh giới trên bản đồ đã hợp nhất toàn bộ phường Chánh Mỹ (cũ, dữ liệu 63 tỉnh/thành trước sáp nhập) với ranh giới phường Thủ Dầu Một mới (dữ liệu 34 tỉnh/thành) để thể hiện đầy đủ hơn về mặt địa lý — diện tích hiển thị trên bản đồ do đó lớn hơn 15,682 km². Các số liệu dân số/hộ dân/khối lượng rác ở trên vẫn theo đúng phạm vi phường chính thức (chỉ gồm một phần Chánh Mỹ) như trong dữ liệu khảo sát gốc, nên không cộng dồn theo ranh giới mở rộng này. Lớp đường/POI lấy từ OpenStreetMap.",
+    tongquan_footnote: "Ranh giới hành chính lấy từ dữ liệu OSM (OpenStreetMap relation 8448188, mã xã 25747), diện tích tính được 15,57 km² — khớp sai số dưới 1% với số liệu chính thức 15,682 km² (bộ 34 tỉnh/thành) nên được dùng làm ranh giới chuẩn để cắt toàn bộ lớp đường/tuyến/điểm trong phân tích này. Lớp đường/POI lấy từ OpenStreetMap.",
 
     stat_ho_dan: "Tổng hộ dân",
     stat_nhan_khau: "Tổng nhân khẩu",
@@ -162,7 +162,7 @@ const I18N = {
     tongquan_h3_khuvuc: "Households & Waste Volume by Sub-area",
     tongquan_h3_phatsinh: "Waste Generation Rate (kg/person/day)",
     tongquan_h3_donvi: "Collection Contractor",
-    tongquan_footnote: "The boundary shown on the map merges the full former Chanh My ward (pre-2025, 63-province dataset) with the new Thu Dau Mot ward boundary (34-province dataset) for a more complete geographic picture — so the mapped area is larger than 15.682 km². The population/household/waste figures above still reflect the official ward scope (only part of Chanh My) from the original survey data, and are not adjusted to this larger boundary. Road/POI layers come from OpenStreetMap.",
+    tongquan_footnote: "The administrative boundary is sourced from OpenStreetMap (relation 8448188, ward code 25747), with a computed area of 15.57 km² — within 1% of the official 15.682 km² figure (34-province dataset) — and is used as the authoritative boundary for clipping every road/route/point layer in this analysis. Road/POI layers come from OpenStreetMap.",
 
     stat_ho_dan: "Total Households",
     stat_nhan_khau: "Total Population",
