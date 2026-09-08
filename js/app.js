@@ -637,14 +637,20 @@ function formatTripKey(key) {
   return chuyen ? `${xe} - ${chuyen}` : xe;
 }
 
+// "Xe 1 - Chuyến 1" -> "Xe 1|Chuyến 1" (matches DATA.routeLayers keys); "Xe 6" -> "Xe 6|"
+function routeKeyFromTuyenLabel(label) {
+  const idx = label.indexOf(" - ");
+  return idx === -1 ? `${label}|` : `${label.slice(0, idx)}|${label.slice(idx + 3)}`;
+}
+
 // Looks up the stop list for a "meet:<tuyen>" or "gen:<xe>|<chuyen>" select value.
 function stopsForSelectValue(value) {
   if (!value) return null;
   const sep = value.indexOf(":");
   const kind = value.slice(0, sep);
   const key = value.slice(sep + 1);
-  if (kind === "meet") return { stops: DATA.tripGroups[key], label: key };
-  if (kind === "gen") return { stops: DATA.routeStopGroups[key], label: formatTripKey(key) };
+  if (kind === "meet") return { stops: DATA.tripGroups[key], label: key, routeKey: routeKeyFromTuyenLabel(key) };
+  if (kind === "gen") return { stops: DATA.routeStopGroups[key], label: formatTripKey(key), routeKey: key };
   return null;
 }
 
@@ -690,16 +696,25 @@ function initOptimizeControls() {
     const speed = parseFloat(speedSlider.value);
     const result = RouteOptimizer.optimize(picked.stops, 0, speed);
     renderOptimizeResult(result, picked.label);
+    // also highlight the matching real route (if any) so it's clear which vehicle this is
+    const realLayer = DATA.routeLayers[picked.routeKey];
+    if (realLayer) highlightRoute(realLayer);
   });
 }
 
 function renderOptimizeResult(result, tuyen) {
   optimizeLayerGroup.clearLayers();
 
+  // thin white halo under both comparison lines so they read clearly against the other
+  // 12 routes still shown underneath on the map
+  const haloStyle = { color: "#ffffff", weight: 8, opacity: 0.9, lineCap: "round", lineJoin: "round", interactive: false };
+  if (result.baseline.coords.length > 1) L.polyline(result.baseline.coords, haloStyle).addTo(optimizeLayerGroup);
+  if (result.optimized.coords.length > 1) L.polyline(result.optimized.coords, haloStyle).addTo(optimizeLayerGroup);
+
   L.polyline(result.baseline.coords, { color: "#999", weight: 4, dashArray: "6,6" })
     .bindTooltip(t("optimize_tooltip_baseline"))
     .addTo(optimizeLayerGroup);
-  L.polyline(result.optimized.coords, { color: "#1c9457", weight: 5 })
+  L.polyline(result.optimized.coords, { color: "#1c9457", weight: 5, className: "route-flow" })
     .bindTooltip(t("optimize_tooltip_optimized"))
     .addTo(optimizeLayerGroup);
 
