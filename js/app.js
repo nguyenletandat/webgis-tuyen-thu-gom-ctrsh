@@ -183,7 +183,15 @@ function addBoundaryLayer(geojson) {
 
 function addRoadsLayer(geojson) {
   roadsLayerGroup.clearLayers();
-  L.geoJSON(geojson, { style: { color: "#9aa89f", weight: 1, opacity: 0.55 } }).addTo(roadsLayerGroup);
+  const invisible = L.divIcon({ className: "", html: "", iconSize: [0, 0] });
+  L.geoJSON(geojson, {
+    style: { color: "#9aa89f", weight: 1, opacity: 0.55 },
+    // degenerate Point slivers can appear inside road features after boundary clipping
+    // (a road segment that only grazes the boundary edge collapses to a point) — they
+    // carry no road geometry, so never let them fall back to Leaflet's default pin icon.
+    filter: (f) => f.geometry.type !== "Point" && f.geometry.type !== "MultiPoint",
+    pointToLayer: (f, latlng) => L.marker(latlng, { icon: invisible, interactive: false }),
+  }).addTo(roadsLayerGroup);
 }
 
 function addRoutesLayer(geojson) {
@@ -413,15 +421,34 @@ function renderTongQuan(stats) {
 
 // ---------------- Tuyến thu gom / Routes ----------------
 let highlightedRouteLayer = null;
+let highlightHaloLayer = null;
 function highlightRoute(layer) {
   if (highlightedRouteLayer && highlightedRouteLayer !== layer) {
     highlightedRouteLayer.setStyle({ weight: 4, opacity: 0.85 });
+  }
+  if (highlightHaloLayer) {
+    routesLayerGroup.removeLayer(highlightHaloLayer);
+    highlightHaloLayer = null;
   }
   // make sure the routes layer itself is switched on, then bring this one to the very front
   if (!map.hasLayer(routesLayerGroup)) {
     map.addLayer(routesLayerGroup);
     const box = document.getElementById("lyr-routes");
     if (box) box.checked = true;
+  }
+  // thin white halo drawn under the selected line so it reads clearly against the other
+  // routes, while its own directional flow animation still plays on top, uninterrupted
+  const sub = layer.getLayers && layer.getLayers()[0];
+  if (sub && sub.getLatLngs) {
+    highlightHaloLayer = L.polyline(sub.getLatLngs(), {
+      color: "#ffffff",
+      weight: 8,
+      opacity: 0.9,
+      lineCap: "round",
+      lineJoin: "round",
+      interactive: false,
+    }).addTo(routesLayerGroup);
+    highlightHaloLayer.bringToBack();
   }
   layer.bringToFront();
   layer.setStyle({ weight: 7, opacity: 1 });
