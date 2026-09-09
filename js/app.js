@@ -521,7 +521,11 @@ function applyTimelineFilter() {
 
   Object.entries(DATA.routeLayers || {}).forEach(([key, layer]) => {
     const win = DATA.routeWindows[key];
-    const active = win && t >= win.start && t <= win.end;
+    // a trip with no parseable schedule (e.g. Xe 7, which the source study reports as running
+    // continuously along a main road with no fixed time slot) has an unknown window, not a "not
+    // running" one -- fading it out at every position on the slider would misrepresent that.
+    // Only trips WITH a known window get dimmed outside it; unscheduled trips stay fully visible.
+    const active = win ? t >= win.start && t <= win.end : true;
     layer.setStyle({ opacity: active ? 1 : 0.1, weight: active ? 5 : 3 });
     if (active && layer.bringToFront) layer.bringToFront();
   });
