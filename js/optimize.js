@@ -84,7 +84,14 @@ const RouteOptimizer = (() => {
     const baselineLen = routeLength(baselineOrder, D);
 
     const nnOrder = nearestNeighborOrder(D, startIndex);
-    const { order: optOrder, length: optLen } = twoOpt(nnOrder, D);
+    const { order: twoOptOrder, length: twoOptLen } = twoOpt(nnOrder, D);
+    // 2-opt only guarantees an improvement over ITS OWN nearest-neighbor starting tour, not
+    // over the baseline (the stops' original listed order) -- for short trips with few stops,
+    // the greedy NN construction can land in a worse local optimum than the baseline order
+    // already is. Never surface a result worse than the baseline: fall back to it instead.
+    const optimizedIsBetter = twoOptLen < baselineLen - 1e-6;
+    const optOrder = optimizedIsBetter ? twoOptOrder : baselineOrder.slice();
+    const optLen = optimizedIsBetter ? twoOptLen : baselineLen;
 
     const speedMs = (avgSpeedKmh * 1000) / 3600;
     const serviceSec = (order) => order.reduce((s, i) => s + (stops[i].service_min ?? serviceMinDefault) * 60, 0);
