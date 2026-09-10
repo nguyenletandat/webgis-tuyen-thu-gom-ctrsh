@@ -385,13 +385,51 @@ function currentLayerCheckedState() {
   return state;
 }
 
+// Remembers each individual route's checkbox state across a legend rebuild (language switch).
+function currentRouteVisibilityState() {
+  const state = {};
+  Object.keys(DATA.routeLayers || {}).forEach((key) => {
+    const box = document.getElementById(`route-vis-${routeVisId(key)}`);
+    if (box) state[key] = box.checked;
+  });
+  return state;
+}
+// Route keys ("Xe 1|Chuyến 1", "Xe 6|") contain characters that aren't safe in an HTML id.
+function routeVisId(key) {
+  return key.replace(/[^a-zA-Z0-9]/g, "_");
+}
+
 function buildLegend() {
   const prevState = currentLayerCheckedState();
+  const prevRouteState = currentRouteVisibilityState();
   const legend = clear("legend");
   const chk = (id, def) => (id in prevState ? prevState[id] : def) ? "checked" : "";
+
+  const routeRows = Object.entries(DATA.routeLayers || {})
+    .map(([key, layer]) => {
+      const feature = (DATA.routes?.features || []).find((f) => `${f.properties.xe}|${f.properties.chuyen}` === key);
+      const p = feature?.properties;
+      const label = p ? trLabel(p.xe) + (p.chuyen ? " – " + trLabel(p.chuyen) : "") : key;
+      const color = p?.mau || "#333";
+      const routeChecked = key in prevRouteState ? prevRouteState[key] : true;
+      return `<label class="legend-row"><input type="checkbox" class="route-vis-box" id="route-vis-${routeVisId(key)}" data-key="${key}" ${routeChecked ? "checked" : ""}/> <span class="route-swatch" style="background:${color}"></span> <span>${label}</span></label>`;
+    })
+    .join("");
+
   legend.appendChild(
     el(`
     <div>
+      <h4 data-i18n="legend_routes_title">${t("legend_routes_title")}</h4>
+      ${routeRows}
+      <h4>${t("legend_title")}</h4>
+      <label class="legend-row"><input type="checkbox" id="lyr-meeting" ${chk("lyr-meeting", true)}/> ${LEGEND_ICONS.meeting} <span>${t("lyr_meeting")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-fixed" ${chk("lyr-fixed", true)}/> ${LEGEND_ICONS.fixed} <span>${t("lyr_fixed")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-collection" ${chk("lyr-collection", false)}/> ${LEGEND_ICONS.collection} <span>${t("lyr_collection")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-landfill" ${chk("lyr-landfill", false)}/> ${LEGEND_ICONS.landfill} <span>${t("lyr_landfill")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-oldwards" ${chk("lyr-oldwards", false)}/> ${LEGEND_ICONS.oldwards} <span>${t("lyr_oldwards")}</span></label>
       <h4 data-i18n="legend_basemap_title">${t("legend_basemap_title")}</h4>
       <div class="basemap-switch">
         <label><input type="radio" name="basemap" value="osm" ${currentBasemapKey === "osm" ? "checked" : ""}/> <span>${t("basemap_osm")}</span></label>
@@ -404,15 +442,6 @@ function buildLegend() {
         <label><input type="radio" name="basemap" value="google_satellite" ${currentBasemapKey === "google_satellite" ? "checked" : ""}/> <span>Google Sat.</span></label>
         <label><input type="radio" name="basemap" value="google_hybrid" ${currentBasemapKey === "google_hybrid" ? "checked" : ""}/> <span>Google Hybrid</span></label>
       </div>
-      <h4>${t("legend_title")}</h4>
-      <label class="legend-row"><input type="checkbox" id="lyr-meeting" ${chk("lyr-meeting", true)}/> ${LEGEND_ICONS.meeting} <span>${t("lyr_meeting")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-fixed" ${chk("lyr-fixed", true)}/> ${LEGEND_ICONS.fixed} <span>${t("lyr_fixed")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-collection" ${chk("lyr-collection", false)}/> ${LEGEND_ICONS.collection} <span>${t("lyr_collection")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-landfill" ${chk("lyr-landfill", false)}/> ${LEGEND_ICONS.landfill} <span>${t("lyr_landfill")}</span></label>
-      <label class="legend-row"><input type="checkbox" id="lyr-oldwards" ${chk("lyr-oldwards", false)}/> ${LEGEND_ICONS.oldwards} <span>${t("lyr_oldwards")}</span></label>
     </div>
   `)
   );
@@ -427,6 +456,18 @@ function buildLegend() {
   };
   document.querySelectorAll('input[name="basemap"]').forEach((radio) => {
     radio.addEventListener("change", (e) => setBasemap(e.target.value));
+  });
+  // per-route visibility: independent of the master "13 tuyến thu gom" toggle below, this
+  // adds/removes just that one route's layer from routesLayerGroup
+  document.querySelectorAll(".route-vis-box").forEach((box) => {
+    const layer = DATA.routeLayers[box.dataset.key];
+    if (!layer) return;
+    box.addEventListener("change", (e) => {
+      if (e.target.checked) routesLayerGroup.addLayer(layer);
+      else routesLayerGroup.removeLayer(layer);
+    });
+    if (box.checked) routesLayerGroup.addLayer(layer);
+    else routesLayerGroup.removeLayer(layer);
   });
   bind("lyr-boundary", boundaryLayerGroup);
   bind("lyr-roads", roadsLayerGroup);
