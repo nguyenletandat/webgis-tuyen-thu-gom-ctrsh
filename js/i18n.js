@@ -84,7 +84,7 @@ const I18N = {
     lyr_routes: "13 tuyến thu gom",
     lyr_meeting: "Điểm hẹn + vùng đệm 300m",
     lyr_fixed: "Bãi tập kết / đổ rác",
-    lyr_collection: "Điểm phát sinh rác (11 nhóm)",
+    lyr_collection: "Điểm phát sinh rác (10 nhóm)",
 
     // Route popup
     popup_khuvuc: "Khu vực",
@@ -230,7 +230,7 @@ const I18N = {
     lyr_routes: "13 collection routes",
     lyr_meeting: "Meeting points + 300m buffer",
     lyr_fixed: "Transfer / disposal stations",
-    lyr_collection: "Waste-generation points (11 groups)",
+    lyr_collection: "Waste-generation points (10 groups)",
 
     popup_khuvuc: "Sub-area",
     popup_khunggio: "Operating window",
