@@ -709,47 +709,40 @@ function initOptimizeControls() {
 function renderOptimizeResult(result, tuyen) {
   optimizeLayerGroup.clearLayers();
 
-  // thin white halo under both comparison lines so they read clearly against the other
-  // 12 routes still shown underneath on the map
-  const haloStyle = { color: "#ffffff", weight: 8, opacity: 0.9, lineCap: "round", lineJoin: "round", interactive: false };
-  if (result.baseline.coords.length > 1) L.polyline(result.baseline.coords, haloStyle).addTo(optimizeLayerGroup);
-  if (result.optimized.coords.length > 1) L.polyline(result.optimized.coords, haloStyle).addTo(optimizeLayerGroup);
-
-  L.polyline(result.baseline.coords, { color: "#999", weight: 4, dashArray: "6,6" })
-    .bindTooltip(t("optimize_tooltip_baseline"))
+  // Only one route is ever physically driven -- the actual/practical visiting order
+  // (baseline: along-street position, or scheduled arrival time for meeting points).
+  // The optimizer still runs internally (see RouteOptimizer.optimize) purely to check
+  // whether a shorter order exists in theory; that check feeds the insight note below,
+  // it never gets its own line on the map.
+  const route = result.baseline;
+  if (route.coords.length > 1) {
+    L.polyline(route.coords, {
+      color: "#ffffff", weight: 8, opacity: 0.9, lineCap: "round", lineJoin: "round", interactive: false,
+    }).addTo(optimizeLayerGroup);
+  }
+  L.polyline(route.coords, { color: "#1c9457", weight: 5, className: "route-flow" })
+    .bindTooltip(t("optimize_tooltip_route"))
     .addTo(optimizeLayerGroup);
-  L.polyline(result.optimized.coords, { color: "#1c9457", weight: 5, className: "route-flow" })
-    .bindTooltip(t("optimize_tooltip_optimized"))
-    .addTo(optimizeLayerGroup);
 
-  if (result.baseline.coords.length) {
-    map.fitBounds(L.polyline(result.baseline.coords.concat(result.optimized.coords)).getBounds(), { maxZoom: 16 });
+  if (route.coords.length) {
+    map.fitBounds(L.polyline(route.coords).getBounds(), { maxZoom: 16 });
   }
 
   const box = clear("optimize-result");
-  const better = result.savingsPct > 0.5;
   box.appendChild(
     el(`
     <div class="result-card">
-      <b>${trLabel(tuyen)} — ${t("optimize_baseline_title")}</b>
-      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${result.baseline.names.join(" → ")}</span></div>
-      <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${result.baseline.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
-      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${result.baseline.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
-    </div>
-    <div class="result-card ${better ? "better" : ""}">
-      <b>${t("optimize_optimized_title")}</b>
-      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${result.optimized.names.join(" → ")}</span></div>
-      <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${result.optimized.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
-      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${result.optimized.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
-      <div class="result-row"><span>${t("optimize_tietkiem")}</span><b>${result.savingsPct.toFixed(1)}%</b></div>
-      <div class="result-row"><span>${t("optimize_nhienlieu")}</span><b>${result.fuelSavedL.toFixed(2)} ${t("unit_lit")}</b></div>
-      <div class="result-row"><span>${t("optimize_co2")}</span><b>${result.co2SavedKg.toFixed(2)} ${t("unit_kg")}</b></div>
+      <b>${trLabel(tuyen)} — ${t("optimize_result_title")}</b>
+      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${route.names.join(" → ")}</span></div>
+      <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${route.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
+      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${route.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
     </div>
   `)
   );
 
-  const insight = el(`<div class="insight-box ${better ? "insight-good" : "insight-neutral"}">${
-    better ? t("insight_improved") : t("insight_already_optimal")
+  const foundShorter = result.savingsPct > 0.5;
+  const insight = el(`<div class="insight-box ${foundShorter ? "insight-neutral" : "insight-good"}">${
+    foundShorter ? t("insight_improved") : t("insight_already_optimal")
   }</div>`);
   box.appendChild(insight);
 }
