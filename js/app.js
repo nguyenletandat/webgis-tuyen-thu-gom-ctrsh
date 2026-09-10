@@ -356,10 +356,15 @@ function buildLegend() {
 function initTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      const wasToiuu = document.querySelector(".tab-btn.active")?.dataset.tab === "toiuu";
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".panel").forEach((p) => p.classList.add("hidden"));
       btn.classList.add("active");
       document.getElementById(`panel-${btn.dataset.tab}`).classList.remove("hidden");
+      // leaving the Optimization tab: undo its heavy dimming of the other 12 routes
+      if (wasToiuu && btn.dataset.tab !== "toiuu") resetRouteEmphasis();
+      // entering the Routes tab: re-apply whatever the timeline slider currently says
+      if (btn.dataset.tab === "tuyen") applyTimelineFilter();
     });
   });
 }
@@ -453,6 +458,24 @@ function highlightRoute(layer) {
   layer.bringToFront();
   layer.setStyle({ weight: 7, opacity: 1 });
   highlightedRouteLayer = layer;
+}
+
+// Fades every route except one (used by the Optimization tab so the single route being
+// checked stands out clearly instead of competing visually with the other 12 on the map).
+function dimAllRoutesExcept(exceptKey) {
+  Object.entries(DATA.routeLayers || {}).forEach(([key, layer]) => {
+    if (key !== exceptKey) layer.setStyle({ opacity: 0.1, weight: 2 });
+  });
+}
+
+// Restores every route to its normal look (called when leaving the Optimization tab).
+function resetRouteEmphasis() {
+  if (highlightHaloLayer) {
+    routesLayerGroup.removeLayer(highlightHaloLayer);
+    highlightHaloLayer = null;
+  }
+  highlightedRouteLayer = null;
+  Object.values(DATA.routeLayers || {}).forEach((layer) => layer.setStyle({ opacity: 0.85, weight: 4 }));
 }
 
 // ---------------- Dòng thời gian / Timeline ----------------
@@ -709,9 +732,11 @@ function initOptimizeControls() {
     const speed = parseFloat(speedSlider.value);
     const result = RouteOptimizer.optimize(picked.stops, 0, speed);
     renderOptimizeResult(result, picked.label);
-    // also highlight the matching real route (if any) so it's clear which vehicle this is
+    // also highlight the matching real route (if any) so it's clear which vehicle this is,
+    // and fade the other 12 routes well down so the checked one stands out on the map
     const realLayer = DATA.routeLayers[picked.routeKey];
     if (realLayer) highlightRoute(realLayer);
+    dimAllRoutesExcept(picked.routeKey);
   });
 }
 
