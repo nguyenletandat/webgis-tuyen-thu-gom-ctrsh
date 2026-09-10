@@ -673,50 +673,44 @@ function formatTripKey(key) {
   return chuyen ? `${xe} - ${chuyen}` : xe;
 }
 
-// "Xe 1 - Chuyến 1" -> "Xe 1|Chuyến 1" (matches DATA.routeLayers keys); "Xe 6" -> "Xe 6|"
-function routeKeyFromTuyenLabel(label) {
-  const idx = label.indexOf(" - ");
-  return idx === -1 ? `${label}|` : `${label.slice(0, idx)}|${label.slice(idx + 3)}`;
+// For each of the 13 trips (routes.geojson is the authoritative list), pick the richest
+// available stop-order source: the official meeting-point schedule if it has >=2 points,
+// else the GIS-derived waste-generation points along the route if it has >=2, else fall
+// back to just the route's own reconstructed geometry (no order to check, e.g. Vehicle 4 -
+// Trip 2 and both trips of Vehicle 5 currently have only a single registered point).
+function buildUnifiedTripOptions() {
+  return (DATA.routes.features || []).map((f) => {
+    const p = f.properties;
+    const routeKey = `${p.xe}|${p.chuyen || ""}`;
+    const label = formatTripKey(routeKey);
+    const meetStops = DATA.tripGroups[label];
+    const genStops = DATA.routeStopGroups[routeKey];
+    if (meetStops && meetStops.length >= 2) return { routeKey, label, kind: "meet", stops: meetStops, count: meetStops.length };
+    if (genStops && genStops.length >= 2) return { routeKey, label, kind: "gen", stops: genStops, count: genStops.length };
+    return { routeKey, label, kind: "route", stops: null, count: 0, feature: f };
+  });
 }
 
-// Looks up the stop list for a "meet:<tuyen>" or "gen:<xe>|<chuyen>" select value.
+// Looks up the pre-built option data for a "trip:<xe>|<chuyen>" select value.
 function stopsForSelectValue(value) {
-  if (!value) return null;
-  const sep = value.indexOf(":");
-  const kind = value.slice(0, sep);
-  const key = value.slice(sep + 1);
-  if (kind === "meet") return { stops: DATA.tripGroups[key], label: key, routeKey: routeKeyFromTuyenLabel(key) };
-  if (kind === "gen") return { stops: DATA.routeStopGroups[key], label: formatTripKey(key), routeKey: key };
-  return null;
+  return (DATA.tripOptions && DATA.tripOptions[value]) || null;
 }
 
-function populateTripSelect(meetGroups, routeStopGroups) {
+function populateTripSelect() {
   const select = document.getElementById("select-trip");
   const prevValue = select.value;
   clear(select);
-
-  const og1 = document.createElement("optgroup");
-  og1.label = t("optgroup_official");
-  Object.entries(meetGroups).forEach(([tuyen, stops]) => {
-    if (stops.length < 2) return;
-    const opt = document.createElement("option");
-    opt.value = `meet:${tuyen}`;
-    opt.textContent = `${trLabel(tuyen)} (${stops.length} ${t("trip_options_suffix")})`;
-    og1.appendChild(opt);
+  DATA.tripOptions = {};
+  buildUnifiedTripOptions().forEach((opt) => {
+    const value = `trip:${opt.routeKey}`;
+    DATA.tripOptions[value] = opt;
+    const el2 = document.createElement("option");
+    el2.value = value;
+    const suffix =
+      opt.kind === "meet" ? t("trip_options_suffix") : opt.kind === "gen" ? t("trip_options_suffix_gen") : t("trip_options_suffix_route");
+    el2.textContent = opt.kind === "route" ? `${trLabel(opt.label)} (${suffix})` : `${trLabel(opt.label)} (${opt.count} ${suffix})`;
+    select.appendChild(el2);
   });
-  select.appendChild(og1);
-
-  const og2 = document.createElement("optgroup");
-  og2.label = t("optgroup_generation");
-  Object.entries(routeStopGroups).forEach(([key, stops]) => {
-    if (stops.length < 2) return;
-    const opt = document.createElement("option");
-    opt.value = `gen:${key}`;
-    opt.textContent = `${trLabel(formatTripKey(key))} (${stops.length} ${t("trip_options_suffix_gen")})`;
-    og2.appendChild(opt);
-  });
-  select.appendChild(og2);
-
   if ([...select.options].some((o) => o.value === prevValue)) select.value = prevValue;
 }
 
@@ -728,10 +722,16 @@ function initOptimizeControls() {
   document.getElementById("btn-optimize").addEventListener("click", () => {
     const value = document.getElementById("select-trip").value;
     const picked = stopsForSelectValue(value);
-    if (!picked || !picked.stops || picked.stops.length < 2) return;
-    const speed = parseFloat(speedSlider.value);
-    const result = RouteOptimizer.optimize(picked.stops, 0, speed);
-    renderOptimizeResult(result, picked.label);
+    if (!picked) return;
+    if (picked.kind === "route") {
+      // too little point data to order (currently: Vehicle 4 - Trip 2, both trips of
+      // Vehicle 5) -- show the trip's own reconstructed/surveyed path directly instead
+      renderOptimizeResult(null, picked.label, picked.feature);
+    } else {
+      const speed = parseFloat(speedSlider.value);
+      const result = RouteOptimizer.optimize(picked.stops, 0, speed);
+      renderOptimizeResult(result, picked.label);
+    }
     // also highlight the matching real route (if any) so it's clear which vehicle this is,
     // and fade the other 12 routes well down so the checked one stands out on the map
     const realLayer = DATA.routeLayers[picked.routeKey];
@@ -740,7 +740,7 @@ function initOptimizeControls() {
   });
 }
 
-function renderOptimizeResult(result, tuyen) {
+function renderOptimizeResult(result, tuyen, routeOnlyFeature) {
   optimizeLayerGroup.clearLayers();
 
   // Only one route is ever physically driven -- the actual/practical visiting order
@@ -748,7 +748,16 @@ function renderOptimizeResult(result, tuyen) {
   // The optimizer still runs internally (see RouteOptimizer.optimize) purely to check
   // whether a shorter order exists in theory; that check feeds the insight note below,
   // it never gets its own line on the map.
-  const route = result.baseline;
+  const isRouteOnly = !!routeOnlyFeature;
+  const route = isRouteOnly
+    ? {
+        coords: routeOnlyFeature.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
+        names: routeOnlyFeature.properties.streets || [],
+        distanceKm: routeOnlyFeature.properties.distance_km,
+        timeMin: null,
+      }
+    : result.baseline;
+
   if (route.coords.length > 1) {
     L.polyline(route.coords, {
       color: "#ffffff", weight: 8, opacity: 0.9, lineCap: "round", lineJoin: "round", interactive: false,
@@ -767,18 +776,17 @@ function renderOptimizeResult(result, tuyen) {
     el(`
     <div class="result-card">
       <b>${trLabel(tuyen)} — ${t("optimize_result_title")}</b>
-      <div class="result-row stack"><span>${t("optimize_thutu")}</span><span>${route.names.join(" → ")}</span></div>
+      <div class="result-row stack"><span>${isRouteOnly ? t("popup_tuyenduong") : t("optimize_thutu")}</span><span>${route.names.join(" → ")}</span></div>
       <div class="result-row"><span>${t("optimize_quangduong")}</span><b>${route.distanceKm.toFixed(2)} ${t("unit_km")}</b></div>
-      <div class="result-row"><span>${t("optimize_thoigian")}</span><b>${route.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>
+      ${route.timeMin != null ? `<div class="result-row"><span>${t("optimize_thoigian")}</span><b>${route.timeMin.toFixed(0)} ${t("unit_phut_full")}</b></div>` : ""}
     </div>
   `)
   );
 
-  const foundShorter = result.savingsPct > 0.5;
-  const insight = el(`<div class="insight-box ${foundShorter ? "insight-neutral" : "insight-good"}">${
-    foundShorter ? t("insight_improved") : t("insight_already_optimal")
-  }</div>`);
-  box.appendChild(insight);
+  const foundShorter = !isRouteOnly && result.savingsPct > 0.5;
+  const insightText = isRouteOnly ? t("insight_route_only") : foundShorter ? t("insight_improved") : t("insight_already_optimal");
+  const insightClass = !isRouteOnly && !foundShorter ? "insight-good" : "insight-neutral";
+  box.appendChild(el(`<div class="insight-box ${insightClass}">${insightText}</div>`));
 }
 
 // ---------------- Quy chuẩn / Compliance ----------------
@@ -852,7 +860,7 @@ function renderAll() {
   renderMeetingTable(DATA.meeting);
   renderCompareTable(DATA.stats);
   renderQuyChuan(DATA.stats, DATA.meeting);
-  populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);
+  populateTripSelect();
 }
 
 function setLanguage(lang) {
@@ -909,7 +917,7 @@ async function main() {
   renderQuyChuan(stats, meeting);
 
   await RoadGraph.load("data/graph.json");
-  populateTripSelect(DATA.tripGroups, DATA.routeStopGroups);
+  populateTripSelect();
   initOptimizeControls();
 }
 
