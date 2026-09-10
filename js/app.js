@@ -18,7 +18,7 @@ const NHOM_COLORS = {
 };
 
 let map, routesLayerGroup, roadsLayerGroup, meetingLayerGroup, fixedLayerGroup, collectionLayerGroup;
-let optimizeLayerGroup, boundaryLayerGroup;
+let optimizeLayerGroup, boundaryLayerGroup, oldWardsLayerGroup, landfillLayerGroup;
 let DATA = {};
 let currentBasemapKey = "osm";
 
@@ -152,12 +152,16 @@ function initMap() {
   map = L.map("map", { zoomControl: true }).setView(STUDY_CENTER, 14);
   BASEMAPS.osm.addTo(map);
 
+  // old-ward boundary added first so it sits at the very bottom of the drawing order,
+  // underneath every other layer (it's historical context, not part of the analysis)
+  oldWardsLayerGroup = L.layerGroup();
   boundaryLayerGroup = L.layerGroup().addTo(map);
   roadsLayerGroup = L.layerGroup().addTo(map);
   routesLayerGroup = L.layerGroup().addTo(map);
   meetingLayerGroup = L.layerGroup().addTo(map);
   fixedLayerGroup = L.layerGroup().addTo(map);
   collectionLayerGroup = L.layerGroup();
+  landfillLayerGroup = L.layerGroup();
   optimizeLayerGroup = L.layerGroup().addTo(map);
 }
 
@@ -179,6 +183,44 @@ function addBoundaryLayer(geojson) {
   }
   layer.addTo(boundaryLayerGroup);
   return layer;
+}
+
+// Historical ward boundaries (Phú Cường, Chánh Nghĩa, Phú Thọ) as they existed before the
+// 2024 merger into the single "Phường Thủ Dầu Một" -- shown for context only, off by default.
+function addOldWardsLayer(geojson) {
+  oldWardsLayerGroup.clearLayers();
+  L.geoJSON(geojson, {
+    style: { color: "#7a5c00", weight: 1.5, dashArray: "4,4", fill: true, fillOpacity: 0.03 },
+    onEachFeature: (f, layer) => layer.bindTooltip(f.properties.ten_xa, { sticky: true }),
+  }).addTo(oldWardsLayerGroup);
+}
+
+// Every trip ends by driving straight to the Chánh Phú Hòa waste treatment complex (~23km
+// north, well outside the study area) -- drawn as a plain straight line since the road network
+// beyond the ward boundary isn't part of this study's digitized data. Off by default, like the
+// waste-generation-points layer, since it forces a much-zoomed-out view to see in full.
+const LANDFILL_COORD = [106.6612752, 11.1706114]; // [lon, lat], Bảng 3.3 (KLTN)
+function addLandfillLayer(routesGeojson) {
+  landfillLayerGroup.clearLayers();
+  L.marker([LANDFILL_COORD[1], LANDFILL_COORD[0]], {
+    icon: emojiIcon("🏭", "#000000", 30),
+  })
+    .bindPopup(`<b>${t("landfill_name")}</b><br/>${t("popup_ghichu_baidoRac")}`)
+    .addTo(landfillLayerGroup);
+
+  routesGeojson.features.forEach((f) => {
+    const p = f.properties;
+    const coords = f.geometry.coordinates;
+    const endPt = coords[coords.length - 1];
+    L.polyline([[endPt[1], endPt[0]], [LANDFILL_COORD[1], LANDFILL_COORD[0]]], {
+      color: "#000000",
+      weight: 2,
+      opacity: 0.6,
+      dashArray: "6,6",
+    })
+      .bindTooltip(`${trLabel(p.xe)}${p.chuyen ? " – " + trLabel(p.chuyen) : ""} → ${t("landfill_name")}`)
+      .addTo(landfillLayerGroup);
+  });
 }
 
 function addRoadsLayer(geojson) {
@@ -328,11 +370,13 @@ const LEGEND_ICONS = {
     </svg><span style="margin-left:-16px;font-size:13px;">⏰</span>`,
   fixed: `<span style="font-size:15px;">🗑️🏭</span>`,
   collection: `<span style="font-size:13px;">🏫🛒🏥</span>`,
+  landfill: `<span style="font-size:15px;">🏭</span>`,
+  oldwards: `<svg width="22" height="14" viewBox="0 0 22 14"><line x1="1" y1="7" x2="21" y2="7" stroke="#7a5c00" stroke-width="1.6" stroke-dasharray="4,4"/></svg>`,
 };
 
 // remember which overlay checkboxes are checked across a legend rebuild (language switch)
 function currentLayerCheckedState() {
-  const ids = ["lyr-boundary", "lyr-roads", "lyr-routes", "lyr-meeting", "lyr-fixed", "lyr-collection"];
+  const ids = ["lyr-boundary", "lyr-roads", "lyr-routes", "lyr-meeting", "lyr-fixed", "lyr-collection", "lyr-landfill", "lyr-oldwards"];
   const state = {};
   ids.forEach((id) => {
     const elm = document.getElementById(id);
@@ -367,6 +411,8 @@ function buildLegend() {
       <label class="legend-row"><input type="checkbox" id="lyr-routes" ${chk("lyr-routes", true)}/> ${LEGEND_ICONS.routes} <span>${t("lyr_routes")}</span></label>
       <label class="legend-row"><input type="checkbox" id="lyr-roads" ${chk("lyr-roads", true)}/> ${LEGEND_ICONS.roads} <span>${t("lyr_roads")}</span></label>
       <label class="legend-row"><input type="checkbox" id="lyr-boundary" ${chk("lyr-boundary", true)}/> ${LEGEND_ICONS.boundary} <span>${t("lyr_boundary")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-landfill" ${chk("lyr-landfill", false)}/> ${LEGEND_ICONS.landfill} <span>${t("lyr_landfill")}</span></label>
+      <label class="legend-row"><input type="checkbox" id="lyr-oldwards" ${chk("lyr-oldwards", false)}/> ${LEGEND_ICONS.oldwards} <span>${t("lyr_oldwards")}</span></label>
     </div>
   `)
   );
@@ -388,6 +434,8 @@ function buildLegend() {
   bind("lyr-meeting", meetingLayerGroup);
   bind("lyr-fixed", fixedLayerGroup);
   bind("lyr-collection", collectionLayerGroup);
+  bind("lyr-landfill", landfillLayerGroup);
+  bind("lyr-oldwards", oldWardsLayerGroup);
 }
 
 // ---------------- Sidebar tabs (bound once; language-independent) ----------------
@@ -897,11 +945,13 @@ function renderAll() {
   applyStaticI18n();
 
   addBoundaryLayer(DATA.boundary);
+  addOldWardsLayer(DATA.oldWards);
   addRoadsLayer(DATA.roads);
   addRoutesLayer(DATA.routes);
   addMeetingPointsLayer(DATA.meeting);
   addFixedPointsLayer(DATA.fixed);
   addCollectionPointsLayer(DATA.collection);
+  addLandfillLayer(DATA.routes);
   buildLegend();
 
   renderTongQuan(DATA.stats);
@@ -935,7 +985,7 @@ async function main() {
   initGoogleBasemaps();
   initTimelineControls();
 
-  const [boundary, roads, routes, meeting, fixed, collection, stats, routeStops] = await Promise.all([
+  const [boundary, roads, routes, meeting, fixed, collection, stats, routeStops, oldWards] = await Promise.all([
     fetchJSON("data/boundary.geojson"),
     fetchJSON("data/roads.geojson"),
     fetchJSON("data/routes.geojson"),
@@ -944,18 +994,21 @@ async function main() {
     fetchJSON("data/collection_points.geojson"),
     fetchJSON("data/stats.json"),
     fetchJSON("data/route_stops.json"),
+    fetchJSON("data/old_wards_boundary.geojson"),
   ]);
-  Object.assign(DATA, { boundary, roads, routes, meeting, fixed, collection, stats });
+  Object.assign(DATA, { boundary, roads, routes, meeting, fixed, collection, stats, oldWards });
   DATA.tripGroups = groupMeetingPointsByTrip(meeting);
   DATA.routeStopGroups = routeStops;
 
   const boundaryLayer = addBoundaryLayer(boundary);
   map.fitBounds(boundaryLayer.getBounds(), { padding: [20, 20] });
+  addOldWardsLayer(oldWards);
   addRoadsLayer(roads);
   addRoutesLayer(routes);
   addMeetingPointsLayer(meeting);
   addFixedPointsLayer(fixed);
   addCollectionPointsLayer(collection);
+  addLandfillLayer(routes);
   buildLegend();
   startFlowAnimation();
 
