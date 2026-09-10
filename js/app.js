@@ -530,7 +530,7 @@ function renderTimeline(geojson) {
       const width = Math.max(0.5, ((Math.min(win.end, TIMELINE_DOMAIN_MIN) - win.start) / TIMELINE_DOMAIN_MIN) * 100);
       row.appendChild(el(`<div class="timeline-bar" style="left:${left}%;width:${width}%;background:${p.mau}"></div>`));
     } else {
-      row.appendChild(el(`<div class="timeline-bar unscheduled" style="left:0;width:100%"></div>`));
+      row.appendChild(el(`<div class="timeline-bar unscheduled" style="left:0;width:100%;--route-color:${p.mau}"></div>`));
     }
     row.appendChild(el(`<span class="timeline-row-label">${label}</span>`));
     row.title = `${label} · ${formatGio(p.gio)}`;

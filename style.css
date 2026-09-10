@@ -234,7 +234,7 @@ th { color: var(--muted); font-weight: 600; }
 .timeline-axis span { position: absolute; transform: translateX(-50%); }
 .timeline-row { position: relative; height: 15px; margin-bottom: 2px; background: #eef2ef; border-radius: 3px; }
 .timeline-bar { position: absolute; top: 0; height: 100%; border-radius: 3px; opacity: 0.9; }
-.timeline-bar.unscheduled { background: repeating-linear-gradient(45deg, #ccc, #ccc 4px, #ddd 4px, #ddd 8px); }
+.timeline-bar.unscheduled { background: repeating-linear-gradient(45deg, var(--route-color, #ccc), var(--route-color, #ccc) 4px, #fff 4px, #fff 8px); opacity: 0.55; }
 .timeline-row-label { position: absolute; left: 4px; top: 0; font-size: 8.5px; color: #fff; line-height: 15px; font-weight: 700; text-shadow: 0 0 2px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap; overflow: hidden; max-width: 95%; }
 .timeline-cursor { position: absolute; top: 14px; bottom: 0; width: 2px; background: #c0392b; z-index: 5; pointer-events: none; }
 
