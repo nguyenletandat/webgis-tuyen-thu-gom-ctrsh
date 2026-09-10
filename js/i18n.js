@@ -49,6 +49,8 @@ const I18N = {
     diemhen_h3_sosanh: "So sánh hiệu quả vận hành (Bảng 3.5, trích Xe 1 - Chuyến 1)",
     badge_dat: "Đạt",
     badge_kiemtra: "Kiểm tra",
+    qcvn_reason_unknown: "Chưa đo được khoảng cách tới công trình gần nhất",
+    qcvn_reason_tooclose: "Cách công trình gần nhất {d} m — chưa đạt mức tối thiểu 20 m theo QCVN 01:2021/BXD",
 
     toiuu_h2: "Lộ trình ghé điểm & kiểm chứng tối ưu",
     toiuu_note: "Thứ tự ghé điểm dưới đây là thứ tự thực tế xe phải theo — dọc một con đường thì phải đi qua các điểm theo đúng thứ tự chúng nằm trên đường, còn ở điểm hẹn thì phải theo đúng giờ hẹn đã thống nhất với xe thô sơ. Công cụ chạy thêm Dijkstra trên mạng lưới đường thật + Nearest-Neighbor/2-opt chỉ để kiểm chứng xem thứ tự này đã ngắn nhất về mặt không gian hay chưa.",
@@ -188,6 +190,8 @@ const I18N = {
     diemhen_h3_sosanh: "Operational Efficiency Comparison (Table 3.5, Vehicle 1 – Trip 1 excerpt)",
     badge_dat: "Pass",
     badge_kiemtra: "Review",
+    qcvn_reason_unknown: "Distance to the nearest building has not been measured yet",
+    qcvn_reason_tooclose: "{d} m from the nearest building — below the 20 m minimum required by QCVN 01:2021/BXD",
 
     toiuu_h2: "Stop-Visiting Route & Optimality Check",
     toiuu_note: "The visiting order below is the order the vehicle actually has to follow -- along a street it necessarily passes stops in the order they lie on that street, and at meeting points it must keep the arrival time agreed with the handcart crews. The tool additionally runs Dijkstra on the real road network plus Nearest-Neighbor/2-opt purely to verify whether this order is already the shortest one possible.",

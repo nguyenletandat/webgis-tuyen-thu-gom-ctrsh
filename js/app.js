@@ -581,6 +581,15 @@ function renderRouteList(geojson) {
 }
 
 // ---------------- Điểm hẹn & lịch trình / Meeting points & schedule ----------------
+// Why a meeting point is flagged "Kiểm tra" (fails or can't yet confirm the QCVN
+// 01:2021/BXD ≥20m minimum setback from the nearest building).
+function qcvnReasonNote(p) {
+  if (p.dat_qcvn_01_2021) return "";
+  const d = p.khoang_cach_cong_trinh_gan_nhat_m;
+  const text = d == null ? t("qcvn_reason_unknown") : t("qcvn_reason_tooclose").replace("{d}", d);
+  return `<br/><small class="muted">${text}</small>`;
+}
+
 function renderMeetingTable(geojson) {
   const tbody = clear(document.querySelector("#tbl-diemhen tbody"));
   geojson.features.forEach((f) => {
@@ -588,7 +597,7 @@ function renderMeetingTable(geojson) {
     const [lon, lat] = f.geometry.coordinates;
     const badge = p.dat_qcvn_01_2021
       ? `<span class="badge ok">${t("badge_dat")}</span>`
-      : `<span class="badge warn">${t("badge_kiemtra")}</span>`;
+      : `<span class="badge warn">${t("badge_kiemtra")}</span>${qcvnReasonNote(p)}`;
     const row = el(`
       <tr>
         <td>${trLabel(p.tuyen)}</td>
