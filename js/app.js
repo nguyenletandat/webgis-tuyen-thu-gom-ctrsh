@@ -197,10 +197,19 @@ function addRoadsLayer(geojson) {
 function addRoutesLayer(geojson) {
   routesLayerGroup.clearLayers();
   DATA.routeLayers = {};
+  DATA.routeFlowLayers = {};
   geojson.features.forEach((f) => {
     const p = f.properties;
+    // Solid, static base line -- this is what's actually seen and clicked, and it never
+    // animates, so it can never look choppy. A separate, low-opacity copy on top (below)
+    // carries the animated "flow" dash; because it's faint, any stutter in it is not
+    // perceptually noticeable, which is the whole point of splitting these into two layers.
     const layer = L.geoJSON(f, {
-      style: { color: p.mau || "#333", weight: 4, opacity: 0.85, className: "route-flow" },
+      style: { color: p.mau || "#333", weight: 4, opacity: 0.85 },
+    });
+    const flow = L.geoJSON(f, {
+      style: { color: p.mau || "#333", weight: 2.5, opacity: 0.45, className: "route-flow" },
+      interactive: false,
     });
     const key = `${p.xe}|${p.chuyen}`;
     const label = trLabel(p.xe) + (p.chuyen ? " – " + trLabel(p.chuyen) : "");
@@ -214,7 +223,9 @@ function addRoutesLayer(geojson) {
     `;
     layer.bindPopup(popup);
     layer.addTo(routesLayerGroup);
+    flow.addTo(routesLayerGroup);
     DATA.routeLayers[key] = layer;
+    DATA.routeFlowLayers[key] = flow;
   });
 }
 
@@ -425,11 +436,25 @@ function renderTongQuan(stats) {
 }
 
 // ---------------- Tuyến thu gom / Routes ----------------
-let highlightedRouteLayer = null;
+let highlightedRouteKey = null;
 let highlightHaloLayer = null;
-function highlightRoute(layer) {
-  if (highlightedRouteLayer && highlightedRouteLayer !== layer) {
-    highlightedRouteLayer.setStyle({ weight: 4, opacity: 0.85 });
+
+// Keeps a route's solid base line and its faint animated flow overlay in sync -- the overlay's
+// opacity always tracks a fraction of the base's, so it fades/brightens together with it (when
+// dimmed in the Optimization tab, highlighted, etc.) while staying subtle enough that a dropped
+// animation frame is never really noticeable.
+function setRouteVisualStyle(key, { opacity, weight }) {
+  const base = DATA.routeLayers[key];
+  const flow = DATA.routeFlowLayers && DATA.routeFlowLayers[key];
+  if (base) base.setStyle({ opacity, weight });
+  if (flow) flow.setStyle({ opacity: opacity * 0.55, weight: Math.max(1.5, weight - 1.5) });
+}
+
+function highlightRoute(key) {
+  const layer = DATA.routeLayers[key];
+  if (!layer) return;
+  if (highlightedRouteKey && highlightedRouteKey !== key) {
+    setRouteVisualStyle(highlightedRouteKey, { opacity: 0.85, weight: 4 });
   }
   if (highlightHaloLayer) {
     routesLayerGroup.removeLayer(highlightHaloLayer);
@@ -456,15 +481,17 @@ function highlightRoute(layer) {
     highlightHaloLayer.bringToBack();
   }
   layer.bringToFront();
-  layer.setStyle({ weight: 7, opacity: 1 });
-  highlightedRouteLayer = layer;
+  const flow = DATA.routeFlowLayers[key];
+  if (flow) flow.bringToFront();
+  setRouteVisualStyle(key, { opacity: 1, weight: 7 });
+  highlightedRouteKey = key;
 }
 
 // Fades every route except one (used by the Optimization tab so the single route being
 // checked stands out clearly instead of competing visually with the other 12 on the map).
 function dimAllRoutesExcept(exceptKey) {
-  Object.entries(DATA.routeLayers || {}).forEach(([key, layer]) => {
-    if (key !== exceptKey) layer.setStyle({ opacity: 0.1, weight: 2 });
+  Object.keys(DATA.routeLayers || {}).forEach((key) => {
+    if (key !== exceptKey) setRouteVisualStyle(key, { opacity: 0.1, weight: 2 });
   });
 }
 
@@ -474,8 +501,8 @@ function resetRouteEmphasis() {
     routesLayerGroup.removeLayer(highlightHaloLayer);
     highlightHaloLayer = null;
   }
-  highlightedRouteLayer = null;
-  Object.values(DATA.routeLayers || {}).forEach((layer) => layer.setStyle({ opacity: 0.85, weight: 4 }));
+  highlightedRouteKey = null;
+  Object.keys(DATA.routeLayers || {}).forEach((key) => setRouteVisualStyle(key, { opacity: 0.85, weight: 4 }));
 }
 
 // ---------------- Dòng thời gian / Timeline ----------------
@@ -556,8 +583,11 @@ function applyTimelineFilter() {
     // running" one -- fading it out at every position on the slider would misrepresent that.
     // Only trips WITH a known window get dimmed outside it; unscheduled trips stay fully visible.
     const active = win ? t >= win.start && t <= win.end : true;
-    layer.setStyle({ opacity: active ? 1 : 0.1, weight: active ? 5 : 3 });
-    if (active && layer.bringToFront) layer.bringToFront();
+    setRouteVisualStyle(key, { opacity: active ? 1 : 0.1, weight: active ? 5 : 3 });
+    if (active) {
+      if (layer.bringToFront) layer.bringToFront();
+      DATA.routeFlowLayers[key]?.bringToFront();
+    }
   });
 }
 
@@ -602,7 +632,7 @@ function renderRouteList(geojson) {
       const layer = DATA.routeLayers[key];
       if (layer) {
         map.fitBounds(layer.getBounds(), { maxZoom: 16 });
-        highlightRoute(layer);
+        highlightRoute(key);
         layer.openPopup();
       }
     });
@@ -741,8 +771,7 @@ function initOptimizeControls() {
     }
     // also highlight the matching real route (if any) so it's clear which vehicle this is,
     // and fade the other 12 routes well down so the checked one stands out on the map
-    const realLayer = DATA.routeLayers[picked.routeKey];
-    if (realLayer) highlightRoute(realLayer);
+    highlightRoute(picked.routeKey);
     dimAllRoutesExcept(picked.routeKey);
   });
 }
