@@ -207,7 +207,7 @@ function addRoutesLayer(geojson) {
     const popup = `
       <b>${label}</b><br/>
       ${t("popup_khuvuc")}: ${p.khu_vuc}<br/>
-      ${t("popup_khunggio")}: ${p.gio}<br/>
+      ${t("popup_khunggio")}: ${formatGio(p.gio)}<br/>
       ${t("popup_quangduong")}: ${p.distance_km} km<br/>
       ${t("popup_tuyenduong")}: ${p.streets.join(" → ")}<br/>
       ${t("popup_diemthugom")}:<br/>&bull; ${p.diem_thu_gom.join("<br/>&bull; ")}
@@ -493,6 +493,13 @@ function parseGioWindow(gio) {
   if (end <= start) end += 24 * 60; // safety net; shouldn't trigger given the 17:00-04:00 domain
   return { start, end };
 }
+// A trip with no parseable "gio" value (e.g. Xe 7's placeholder "~") isn't a data gap to
+// hide -- the source study describes it as running continuously with no fixed time slot.
+// Show that in plain words instead of a bare "~", so its always-on timeline behavior (see
+// applyTimelineFilter) reads as intentional rather than a glitch.
+function formatGio(gio) {
+  return parseGioWindow(gio) ? gio : t("gio_lien_tuc");
+}
 function formatClock(minSince17) {
   const total = (17 * 60 + minSince17) % (24 * 60);
   const h = Math.floor(total / 60), m = total % 60;
@@ -526,7 +533,7 @@ function renderTimeline(geojson) {
       row.appendChild(el(`<div class="timeline-bar unscheduled" style="left:0;width:100%"></div>`));
     }
     row.appendChild(el(`<span class="timeline-row-label">${label}</span>`));
-    row.title = `${label} · ${p.gio}`;
+    row.title = `${label} · ${formatGio(p.gio)}`;
     gantt.appendChild(row);
   });
   gantt.appendChild(el(`<div class="timeline-cursor" id="timeline-cursor" style="left:0%"></div>`));
@@ -586,7 +593,7 @@ function renderRouteList(geojson) {
     const item = el(`
       <div class="route-item">
         <div class="row1"><span class="route-swatch" style="background:${p.mau}"></span>${label}</div>
-        <div class="meta">${p.khu_vuc} · ${p.gio} · ${p.distance_km} km</div>
+        <div class="meta">${p.khu_vuc} · ${formatGio(p.gio)} · ${p.distance_km} km</div>
         <div class="diem">${p.diem_thu_gom[0] || ""}</div>
       </div>
     `);

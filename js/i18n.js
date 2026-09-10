@@ -136,6 +136,7 @@ const I18N = {
     qcvn_summary_suffix: "điểm hẹn đạt khoảng cách ATMT ≥ 20m.",
     unit_gio: "giờ",
     unit_m: "m",
+    gio_lien_tuc: "Chạy liên tục, không có khung giờ cố định",
 
     err_load: "Lỗi tải dữ liệu",
     err_load_hint: "Hãy chạy web app qua một local server (xem README).",
@@ -272,6 +273,7 @@ const I18N = {
     qcvn_summary_suffix: "meeting points meet the ≥20m safety-distance requirement.",
     unit_gio: "hours",
     unit_m: "m",
+    gio_lien_tuc: "Runs continuously; no fixed time slot",
 
     err_load: "Failed to load data",
     err_load_hint: "Please run the web app via a local server (see README).",
