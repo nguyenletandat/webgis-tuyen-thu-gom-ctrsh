@@ -243,18 +243,14 @@ th { color: var(--muted); font-weight: 600; }
 .insight-box.insight-neutral { background: #fff8e6; border: 1px solid #e0912b; color: #6b4a10; }
 
 /* Animated "flow" on route lines to show direction of vehicle travel.
-   stroke-dashoffset isn't a compositor-only property, so the browser has to repaint each
-   path every frame; with up to 13 routes animating at once this could stutter noticeably.
-   A slower cycle and a coarser dash pattern mean less visual change per repainted frame
-   (less jarring if a frame drops), and will-change hints the browser to keep these paths
-   on their own layer instead of re-flowing the whole SVG on every tick. */
+   stroke-dashoffset is driven from JS (see startFlowAnimation in app.js) via a single
+   requestAnimationFrame loop shared by every route, rather than each path running its own
+   independent CSS @keyframes animation -- with up to 13+ routes animating simultaneously,
+   letting the browser schedule that many separate animations independently was the actual
+   cause of visible stutter; one rAF loop means exactly one batched style write per frame. */
 .route-flow {
   stroke-dasharray: 14 10;
-  animation: route-flow-move 2.4s linear infinite;
   will-change: stroke-dashoffset;
-}
-@keyframes route-flow-move {
-  to { stroke-dashoffset: -24; }
 }
 
 ::-webkit-scrollbar { width: 7px; height: 7px; }

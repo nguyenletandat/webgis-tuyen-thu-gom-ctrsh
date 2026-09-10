@@ -194,6 +194,44 @@ function addRoadsLayer(geojson) {
   }).addTo(roadsLayerGroup);
 }
 
+// ---------------- Route flow animation (single JS-driven loop, not one CSS animation per path) ----------------
+// stroke-dashoffset forces a repaint of whichever <path> it's set on. Letting the browser run
+// that as an independent CSS @keyframes animation on every route (up to 13, plus the
+// optimizer's own line and any halo) means it schedules and repaints each one on its own timer,
+// which is where the visible stutter came from -- not the dash pattern or duration themselves.
+// Driving every .route-flow element from one requestAnimationFrame loop turns that into exactly
+// one batched style write per frame, synchronized across all of them.
+const FLOW_CYCLE = 24; // matches stroke-dasharray "14 10" (14+10) in style.css
+const FLOW_SPEED = 10; // dash units per second
+let flowOffset = 0;
+let flowRafId = null;
+let flowLastTs = null;
+function tickFlow(ts) {
+  if (flowLastTs == null) flowLastTs = ts;
+  const dtSec = (ts - flowLastTs) / 1000;
+  flowLastTs = ts;
+  flowOffset = (flowOffset - dtSec * FLOW_SPEED) % FLOW_CYCLE;
+  const offsetStr = String(flowOffset);
+  document.querySelectorAll(".route-flow").forEach((el) => {
+    el.style.strokeDashoffset = offsetStr;
+  });
+  flowRafId = requestAnimationFrame(tickFlow);
+}
+function startFlowAnimation() {
+  if (flowRafId != null) return;
+  flowLastTs = null;
+  flowRafId = requestAnimationFrame(tickFlow);
+}
+function stopFlowAnimation() {
+  if (flowRafId != null) cancelAnimationFrame(flowRafId);
+  flowRafId = null;
+}
+// pause while the tab isn't visible -- no point repainting hidden routes
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopFlowAnimation();
+  else startFlowAnimation();
+});
+
 function addRoutesLayer(geojson) {
   routesLayerGroup.clearLayers();
   DATA.routeLayers = {};
@@ -919,6 +957,7 @@ async function main() {
   addFixedPointsLayer(fixed);
   addCollectionPointsLayer(collection);
   buildLegend();
+  startFlowAnimation();
 
   applyStaticI18n();
   renderTongQuan(stats);
