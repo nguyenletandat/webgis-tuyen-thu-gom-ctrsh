@@ -867,19 +867,25 @@ function initOptimizeControls() {
     // route's line back in front of (and hiding) the optimizer's result drawn moments earlier.
     highlightRoute(picked.routeKey);
     dimAllRoutesExcept(picked.routeKey);
+    const routeColor = routeColorForKey(picked.routeKey);
     if (picked.kind === "route") {
       // too little point data to order (currently: Vehicle 4 - Trip 2, both trips of
       // Vehicle 5) -- show the trip's own reconstructed/surveyed path directly instead
-      renderOptimizeResult(null, picked.label, picked.feature);
+      renderOptimizeResult(null, picked.label, picked.feature, routeColor);
     } else {
       const speed = parseFloat(speedSlider.value);
       const result = RouteOptimizer.optimize(picked.stops, 0, speed);
-      renderOptimizeResult(result, picked.label);
+      renderOptimizeResult(result, picked.label, null, routeColor);
     }
   });
 }
 
-function renderOptimizeResult(result, tuyen, routeOnlyFeature) {
+function routeColorForKey(key) {
+  const feature = (DATA.routes?.features || []).find((f) => `${f.properties.xe}|${f.properties.chuyen}` === key);
+  return feature?.properties?.mau || "#333";
+}
+
+function renderOptimizeResult(result, tuyen, routeOnlyFeature, routeColor) {
   optimizeLayerGroup.clearLayers();
 
   // Only one route is ever physically driven -- the actual/practical visiting order
@@ -913,6 +919,14 @@ function renderOptimizeResult(result, tuyen, routeOnlyFeature) {
   const box = clear("optimize-result");
   box.appendChild(
     el(`
+    <div class="legend-row" style="margin-bottom:8px;">
+      <span class="route-swatch" style="background:${routeColor || "#333"};border:1.5px solid #fff;box-shadow:0 0 0 1px #999;"></span>
+      <span>${t("optimize_legend_full")}</span>
+    </div>
+    <div class="legend-row" style="margin-bottom:8px;">
+      <span class="route-swatch" style="background:#1c9457;"></span>
+      <span>${t("optimize_legend_checked")}</span>
+    </div>
     <div class="result-card">
       <b>${trLabel(tuyen)} — ${t("optimize_result_title")}</b>
       <div class="result-row stack"><span>${isRouteOnly ? t("popup_tuyenduong") : t("optimize_thutu")}</span><span>${route.names.join(" → ")}</span></div>
