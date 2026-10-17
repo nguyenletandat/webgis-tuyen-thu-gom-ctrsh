@@ -33,7 +33,6 @@ const I18N = {
     meeting_value: "13 điểm",
     gen_khoaluan: "Nghiên cứu này (Thủ Dầu Một)",
     gen_tphcm: "Đo thực tế tại TP.HCM (tham khảo)",
-    gen_giaotrinh: "Giáo trình Trần Thị Mỹ Diệu (2010)",
 
     tuyen_h2: "13 chuyến / 8 xe ép rác",
     timeline_h3: "Dòng thời gian hoạt động",
@@ -181,7 +180,6 @@ const I18N = {
     meeting_value: "13 points",
     gen_khoaluan: "This study (Thu Dau Mot)",
     gen_tphcm: "Field-measured in HCMC (reference)",
-    gen_giaotrinh: "Tran Thi My Dieu textbook (2010)",
 
     tuyen_h2: "13 Trips / 8 Compactor Trucks",
     timeline_h3: "Operating Timeline",

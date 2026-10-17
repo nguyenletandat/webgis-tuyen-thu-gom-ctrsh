@@ -534,7 +534,6 @@ function renderTongQuan(stats) {
   const genRows = [
     [t("gen_khoaluan"), g.so_lieu_khoa_luan_kg_nguoi_ngay],
     [t("gen_tphcm"), g.so_lieu_do_thuc_te_tphcm_kg_nguoi_ngay],
-    [t("gen_giaotrinh"), g.so_lieu_giao_trinh_kg_nguoi_ngay],
   ];
   const maxGen = Math.max(...genRows.map((r) => r[1]));
   const genChart = clear("chart-phatsinh");
